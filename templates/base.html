@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SENTINEL — CTI Platform{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+    {% block head_scripts %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- ═══ HEADER ════════════════════════════════════════════ -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
+                <div class="logo-text">
+                    <span class="logo-name">Sentinel</span>
+                    <span class="logo-tagline">CTI Platform </span>
+                </div>
+            </a>
+            <nav class="nav">
+                <a href="/"        class="nav-link {% if active_page == 'about'    %}active{% endif %}"><i class="fas fa-microchip"></i> About</a>
+                <a href="/threats" class="nav-link {% if active_page == 'threats'  %}active{% endif %}"><i class="fas fa-exclamation-triangle"></i> Threats</a>
+                <a href="/analyze" class="nav-link {% if active_page == 'analysis' %}active{% endif %}"><i class="fas fa-search"></i> Analyze</a>
+                <a href="/insights"class="nav-link {% if active_page == 'insights' %}active{% endif %}"><i class="fas fa-chart-bar"></i> Insights</a>
+                <a href="/emerging-threats" class="nav-link {% if active_page == 'emerging' %}active{% endif %}"><i class="fas fa-wave-square"></i> Emerging</a>
+                <span class="nav-badge"><span class="pulse-dot"></span>Live</span>
+            </nav>
+            <!-- Mobile hamburger -->
+            <button class="nav-mobile-toggle" onclick="toggleMobileNav()" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <!-- Mobile nav drawer -->
+        <div class="nav-mobile-drawer" id="mobileNavDrawer">
+            <a href="/"        class="nav-mobile-link {% if active_page == 'about'    %}active{% endif %}"><i class="fas fa-microchip"></i> About</a>
+            <a href="/threats" class="nav-mobile-link {% if active_page == 'threats'  %}active{% endif %}"><i class="fas fa-exclamation-triangle"></i> Threats</a>
+            <a href="/analyze" class="nav-mobile-link {% if active_page == 'analysis' %}active{% endif %}"><i class="fas fa-search"></i> Analyze</a>
+            <a href="/insights"class="nav-mobile-link {% if active_page == 'insights' %}active{% endif %}"><i class="fas fa-chart-bar"></i> Insights</a>
+            <a href="/emerging-threats" class="nav-mobile-link {% if active_page == 'emerging' %}active{% endif %}"><i class="fas fa-wave-square"></i> Emerging Threats</a>
+        </div>
+    </header>
+
+    <!-- ═══ PAGE BREADCRUMB BAR ═══════════════════════════════ -->
+    <div class="page-breadcrumb-bar">
+        <div class="container">
+            <div class="breadcrumb-inner">
+                <span class="breadcrumb-home"><i class="fas fa-shield-halved"></i> Sentinel</span>
+                <i class="fas fa-chevron-right breadcrumb-sep"></i>
+                <span class="breadcrumb-current">{% block breadcrumb %}Dashboard{% endblock %}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ PAGE CONTENT ═════════════════════════════════════ -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ═══ FOOTER ════════════════════════════════════════════ -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
+                        <div class="logo-text">
+                            <span class="logo-name">Sentinel</span>
+                            <span class="logo-tagline">CTI Platform</span>
+                        </div>
+                    </div>
+                    <p>Advanced cyber threat intelligence powered by multi-model AI — SVM, DistilBERT, and Gemini working in concert.</p>
+                </div>
+                <div>
+                    <div class="footer-col-title">Navigate</div>
+                    <ul class="footer-links">
+                        <li><a href="/">About &amp; Features</a></li>
+                        <li><a href="/threats">Threat Taxonomy</a></li>
+                        <li><a href="/analyze">Threat Analyzer</a></li>
+                        <li><a href="/insights">Insights Dashboard</a></li>
+                        <li><a href="/emerging-threats">Emerging Threats</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-col-title">Threat Types</div>
+                    <ul class="footer-links">
+                        <li>DDoS Attacks</li>
+                        <li>Botnets</li>
+                        <li>Malware</li>
+                        <li>Phishing</li>
+                        <li>Spam</li>
+                        <li>Ransomware</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Sentinel CTI Platform — Built with Flask, scikit-learn, HuggingFace &amp; Gemini AI</p>
+                <p style="color:var(--cyan); font-size:0.72rem;">v2.0.0</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block body_scripts %}{% endblock %}
+
+    <script>
+        function toggleMobileNav() {
+            document.getElementById('mobileNavDrawer').classList.toggle('open');
+        }
+        // Close mobile nav when a link is clicked
+        document.querySelectorAll('.nav-mobile-link').forEach(l =>
+            l.addEventListener('click', () => document.getElementById('mobileNavDrawer').classList.remove('open'))
+        );
+    </script>
+
+</body>
+</html>

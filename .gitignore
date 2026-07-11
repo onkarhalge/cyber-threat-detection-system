@@ -1,0 +1,38 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual Environment
+pojo/
+venv/
+.venv/
+env/
+
+# VS Code
+.vscode/
+
+# Environment variables
+.env
+
+# SQLite database
+*.db
+*.db-shm
+*.db-wal
+
+# ML model files (too large for git — downloaded separately during deploy)
+models/*.pkl
+models/distilbert_cti_final/
+
+# Windows shortcut
+*.lnk
+
+# Python cache
+.pytest_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db

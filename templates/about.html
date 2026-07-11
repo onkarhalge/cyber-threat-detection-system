@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}About — SENTINEL CTI Platform{% endblock %}
+{% block breadcrumb %}<i class="fas fa-microchip"></i> About{% endblock %}
+
+{% block content %}
+
+<!-- ═══ HERO ═══════════════════════════════════════════════ -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-eyebrow"><i class="fas fa-satellite-dish"></i>&nbsp; Real-Time Threat Intelligence</div>
+        <h1>Detect &amp; Classify<br><em>Cyber Threats</em> with AI</h1>
+        <p>Powered by SVM, DistilBERT &amp; Gemini AI — analyze threat intelligence text, OTX pulses, and security reports with precision.</p>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <span class="hero-stat-value">3</span>
+                <span class="hero-stat-label">AI Models</span>
+            </div>
+            <div class="hero-stat">
+                <span class="hero-stat-value">6+</span>
+                <span class="hero-stat-label">Threat Types</span>
+            </div>
+            <div class="hero-stat">
+                <span class="hero-stat-value">OTX</span>
+                <span class="hero-stat-label">Integration</span>
+            </div>
+            <div class="hero-stat">
+                <span class="hero-stat-value">Real‑Time</span>
+                <span class="hero-stat-label">Analysis</span>
+            </div>
+        </div>
+        <!-- Quick-action hero CTA -->
+        <div class="hero-cta-row">
+            <a href="/analyze" class="btn btn-primary btn-lg"><i class="fas fa-search"></i> Start Analyzing</a>
+            <a href="/threats" class="btn btn-secondary btn-lg"><i class="fas fa-exclamation-triangle"></i> View Threats</a>
+            <a href="/insights" class="btn btn-ghost btn-lg"><i class="fas fa-chart-bar"></i> Dashboard</a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ FEATURES GRID ════════════════════════════════════════ -->
+<section class="features-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-label"><i class="fas fa-microchip"></i>&nbsp; System Capabilities</div>
+            <h2>Built for Security Professionals</h2>
+            <p>Multi-model AI pipeline with full OTX integration and Gemini-powered summaries.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card fade-in">
+                <div class="feature-icon-wrap icon-cyan"><i class="fas fa-brain"></i></div>
+                <h3>Dual-Stage Classification</h3>
+                <p>SVM binary model filters noise; DistilBERT fine-tuned on CTI data assigns precise threat categories.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon-wrap icon-purple"><i class="fas fa-robot"></i></div>
+                <h3>Gemini AI Insights</h3>
+                <p>Every detected threat receives an analyst-grade summary: intent, technique, impact &amp; mitigations.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon-wrap icon-green"><i class="fas fa-globe"></i></div>
+                <h3>OTX Live Feed</h3>
+                <p>Automatically fetch and classify the latest AlienVault OTX pulses with one click.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon-wrap icon-amber"><i class="fas fa-chart-line"></i></div>
+                <h3>Insights Dashboard</h3>
+                <p>Interactive charts, trend analysis, confidence distributions, and category comparisons.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon-wrap icon-red"><i class="fas fa-filter"></i></div>
+                <h3>Smart Filtering</h3>
+                <p>Filter by category, time range, and source. Full-text search across threat data and summaries.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon-wrap icon-blue"><i class="fas fa-bolt"></i></div>
+                <h3>Real-Time Processing</h3>
+                <p>Preprocessing, classification, and AI summarization pipeline completes in seconds.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ════════════════════════════════════════ -->
+<section class="how-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-label"><i class="fas fa-sitemap"></i>&nbsp; Pipeline</div>
+            <h2>How It Works</h2>
+            <p>Three-stage AI pipeline from raw text to actionable intelligence.</p>
+        </div>
+        <div class="pipeline-steps">
+            <div class="pipeline-step">
+                <div class="pipeline-num">01</div>
+                <div class="pipeline-icon icon-cyan"><i class="fas fa-file-alt"></i></div>
+                <h3>Input</h3>
+                <p>Paste raw threat text, paste a security report, or fetch live OTX pulses directly.</p>
+            </div>
+            <div class="pipeline-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="pipeline-step">
+                <div class="pipeline-num">02</div>
+                <div class="pipeline-icon icon-purple"><i class="fas fa-brain"></i></div>
+                <h3>Classify</h3>
+                <p>SVM binary check → DistilBERT multi-class categorisation into 6 threat types.</p>
+            </div>
+            <div class="pipeline-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="pipeline-step">
+                <div class="pipeline-num">03</div>
+                <div class="pipeline-icon icon-green"><i class="fas fa-robot"></i></div>
+                <h3>Summarise</h3>
+                <p>Gemini AI generates analyst-grade insight: intent, MITRE technique, impact &amp; mitigations.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

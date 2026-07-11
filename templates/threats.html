@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Threat Taxonomy — SENTINEL CTI Platform{% endblock %}
+{% block breadcrumb %}<i class="fas fa-exclamation-triangle"></i> Threats{% endblock %}
+
+{% block content %}
+
+<section class="threat-types-section page-hero-pad">
+    <div class="container">
+
+        <!-- Section Header -->
+        <div class="section-header">
+            <div class="section-label"><i class="fas fa-exclamation-triangle"></i>&nbsp; Threat Taxonomy</div>
+            <h2>What We Detect</h2>
+            <p>Six primary threat categories identified through multi-label AI classification. Click any card to learn more.</p>
+        </div>
+
+        <!-- Threat Grid -->
+        <div class="threat-grid">
+
+            <div class="threat-card" onclick="openThreatDetail('ddos')">
+                <div class="threat-card-img">
+                    <img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=200&fit=crop" alt="DDoS">
+                    <div class="threat-card-overlay">
+                        <span class="threat-badge"><i class="fas fa-bolt"></i>&nbsp; DDoS</span>
+                    </div>
+                </div>
+                <div class="threat-card-body">
+                    <h3>DDoS Attack</h3>
+                    <p>Distributed denial-of-service campaigns flooding infrastructure with malicious traffic, overwhelming capacity and causing service outages.</p>
+                    <div class="threat-card-tags">
+                        <span class="threat-tag">Network</span>
+                        <span class="threat-tag">Availability</span>
+                        <span class="threat-tag">Volumetric</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="threat-card" onclick="openThreatDetail('botnet')">
+                <div class="threat-card-img">
+                    <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=200&fit=crop" alt="Botnet">
+                    <div class="threat-card-overlay">
+                        <span class="threat-badge"><i class="fas fa-network-wired"></i>&nbsp; Botnet</span>
+                    </div>
+                </div>
+                <div class="threat-card-body">
+                    <h3>Botnets</h3>
+                    <p>Compromised device networks remotely controlled for coordinated malicious operations including spam, DDoS, and data exfiltration.</p>
+                    <div class="threat-card-tags">
+                        <span class="threat-tag">C2</span>
+                        <span class="threat-tag">Persistence</span>
+                        <span class="threat-tag">Lateral Movement</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="threat-card" onclick="openThreatDetail('malware')">
+                <div class="threat-card-img">
+                    <img src="https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=400&h=200&fit=crop" alt="Malware">
+                    <div class="threat-card-overlay">
+                        <span class="threat-badge"><i class="fas fa-bug"></i>&nbsp; Malware</span>
+                    </div>
+                </div>
+                <div class="threat-card-body">
+                    <h3>Malware</h3>
+                    <p>Malicious software engineered to disrupt, damage, or gain unauthorized system access — includes trojans, worms, spyware, and rootkits.</p>
+                    <div class="threat-card-tags">
+                        <span class="threat-tag">Execution</span>
+                        <span class="threat-tag">Evasion</span>
+                        <span class="threat-tag">Exfiltration</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="threat-card" onclick="openThreatDetail('phishing')">
+                <div class="threat-card-img">
+                    <img src="https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=400&h=200&fit=crop" alt="Phishing">
+                    <div class="threat-card-overlay">
+                        <span class="threat-badge"><i class="fas fa-user-secret"></i>&nbsp; Phishing</span>
+                    </div>
+                </div>
+                <div class="threat-card-body">
+                    <h3>Phishing</h3>
+                    <p>Social engineering attacks crafted to harvest credentials and sensitive user data through deceptive emails, sites, and messages.</p>
+                    <div class="threat-card-tags">
+                        <span class="threat-tag">Social Engineering</span>
+                        <span class="threat-tag">Credential Theft</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="threat-card" onclick="openThreatDetail('spam')">
+                <div class="threat-card-img">
+                    <img src="https://images.unsplash.com/photo-1557200134-90327ee9fafa?w=400&h=200&fit=crop" alt="Spam">
+                    <div class="threat-card-overlay">
+                        <span class="threat-badge"><i class="fas fa-envelope-open-text"></i>&nbsp; Spam</span>
+                    </div>
+                </div>
+                <div class="threat-card-body">
+                    <h3>Spam</h3>
+                    <p>Unsolicited bulk messages embedding malicious payloads, deceptive content, or acting as delivery vehicles for other attack vectors.</p>
+                    <div class="threat-card-tags">
+                        <span class="threat-tag">Email</span>
+                        <span class="threat-tag">Delivery</span>
+                        <span class="threat-tag">Bulk</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="threat-card" onclick="openThreatDetail('ransomware')">
+                <div class="threat-card-img">
+                    <img src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=200&fit=crop" alt="Ransomware">
+                    <div class="threat-card-overlay">
+                        <span class="threat-badge"><i class="fas fa-key"></i>&nbsp; Ransomware</span>
+                    </div>
+                </div>
+                <div class="threat-card-body">
+                    <h3>Ransomware</h3>
+                    <p>Encryption-based extortion malware holding critical data hostage for ransom — often deployed via phishing or exploitation.</p>
+                    <div class="threat-card-tags">
+                        <span class="threat-tag">Encryption</span>
+                        <span class="threat-tag">Extortion</span>
+                        <span class="threat-tag">Impact</span>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /.threat-grid -->
+
+        <!-- Threat Detail Drawer -->
+        <div class="threat-detail-drawer" id="threatDetailDrawer">
+            <div class="drawer-backdrop" onclick="closeThreatDetail()"></div>
+            <div class="drawer-panel">
+                <div class="drawer-header">
+                    <div class="drawer-title" id="drawerTitle">—</div>
+                    <button class="drawer-close" onclick="closeThreatDetail()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="drawer-body" id="drawerBody"></div>
+                <div class="drawer-footer">
+                    <a href="/analyze" class="btn btn-primary"><i class="fas fa-search"></i> Analyze This Threat Type</a>
+                    <button class="btn btn-ghost" onclick="closeThreatDetail()">Close</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}
+
+{% block body_scripts %}
+<script>
+const THREAT_DATA = {
+    ddos: {
+        title: '<i class="fas fa-bolt"></i> DDoS Attack',
+        color: '#00e5ff',
+        description: 'A Distributed Denial-of-Service (DDoS) attack floods a target server, service, or network with a massive volume of internet traffic, rendering it inaccessible to legitimate users.',
+        indicators: ['High-volume traffic spikes', 'Multiple source IPs', 'Protocol anomalies', 'Service unavailability'],
+        mitre: ['T1498 – Network Denial of Service', 'T1499 – Endpoint Denial of Service'],
+        mitigation: ['Rate limiting &amp; traffic scrubbing', 'CDN / Anycast distribution', 'Upstream filtering with ISP', 'Redundant infrastructure'],
+    },
+    botnet: {
+        title: '<i class="fas fa-network-wired"></i> Botnets',
+        color: '#00ffa3',
+        description: 'A botnet is a network of compromised computers (bots) controlled by a threat actor via Command &amp; Control (C2) infrastructure to perform coordinated malicious tasks.',
+        indicators: ['C2 beacon traffic', 'Scheduled outbound connections', 'Unusual DNS queries', 'Lateral movement'],
+        mitre: ['T1071 – Application Layer Protocol', 'T1102 – Web Service', 'T1090 – Proxy'],
+        mitigation: ['Network traffic monitoring', 'DNS sinkholing', 'Endpoint Detection &amp; Response', 'Patch management'],
+    },
+    malware: {
+        title: '<i class="fas fa-bug"></i> Malware',
+        color: '#ff1a4b',
+        description: 'Malware (malicious software) encompasses any software intentionally designed to cause disruption, damage, or unauthorized access — including viruses, trojans, worms, spyware, and rootkits.',
+        indicators: ['Suspicious process creation', 'Unusual file modifications', 'Registry persistence keys', 'Outbound C2 connections'],
+        mitre: ['T1059 – Command &amp; Scripting Interpreter', 'T1055 – Process Injection', 'T1547 – Boot/Logon Autostart'],
+        mitigation: ['AV / EDR solutions', 'Application allowlisting', 'User privilege restrictions', 'Regular backups'],
+    },
+    phishing: {
+        title: '<i class="fas fa-user-secret"></i> Phishing',
+        color: '#a855f7',
+        description: 'Phishing uses deceptive communications — emails, messages, or websites — to trick users into revealing credentials, financial data, or installing malware.',
+        indicators: ['Lookalike domains', 'Urgent language', 'Suspicious attachments', 'Mismatched URLs'],
+        mitre: ['T1566 – Phishing', 'T1598 – Phishing for Information', 'T1192 – Spearphishing Link'],
+        mitigation: ['Email filtering &amp; DMARC', 'Security awareness training', 'MFA on all accounts', 'URL sandboxing'],
+    },
+    spam: {
+        title: '<i class="fas fa-envelope-open-text"></i> Spam',
+        color: '#f97316',
+        description: 'Spam refers to unsolicited bulk messages sent across email or other channels. While often merely annoying, spam frequently serves as the delivery mechanism for phishing, malware, and fraud campaigns.',
+        indicators: ['High-volume send rates', 'Spoofed sender addresses', 'Generic subject lines', 'Embedded malicious links'],
+        mitre: ['T1566.001 – Spearphishing Attachment', 'T1566.002 – Spearphishing Link'],
+        mitigation: ['Spam filters &amp; bayesian classifiers', 'SPF / DKIM / DMARC policies', 'Blocklist monitoring', 'User reporting workflows'],
+    },
+    ransomware: {
+        title: '<i class="fas fa-key"></i> Ransomware',
+        color: '#f59e0b',
+        description: 'Ransomware encrypts victim data and demands payment (usually cryptocurrency) for the decryption key. Modern ransomware groups also threaten to leak stolen data (double extortion).',
+        indicators: ['Mass file encryption', 'Ransom note creation', 'Shadow copy deletion', 'C2 key exchange traffic'],
+        mitre: ['T1486 – Data Encrypted for Impact', 'T1490 – Inhibit System Recovery', 'T1083 – File &amp; Directory Discovery'],
+        mitigation: ['Offline / immutable backups', 'Network segmentation', 'Patch critical vulnerabilities', 'Disable unnecessary RDP/SMB'],
+    },
+};
+
+function openThreatDetail(key) {
+    const d = THREAT_DATA[key];
+    if (!d) return;
+    document.getElementById('drawerTitle').innerHTML = `<span style="color:${d.color}">${d.title}</span>`;
+    document.getElementById('drawerBody').innerHTML = `
+        <p class="drawer-desc">${d.description}</p>
+        <div class="drawer-section">
+            <div class="drawer-section-label"><i class="fas fa-binoculars"></i> Key Indicators</div>
+            <ul class="drawer-list">${d.indicators.map(i => `<li>${i}</li>`).join('')}</ul>
+        </div>
+        <div class="drawer-section">
+            <div class="drawer-section-label"><i class="fas fa-map"></i> MITRE ATT&CK Techniques</div>
+            <ul class="drawer-list mitre">${d.mitre.map(m => `<li><code>${m}</code></li>`).join('')}</ul>
+        </div>
+        <div class="drawer-section">
+            <div class="drawer-section-label"><i class="fas fa-shield-alt"></i> Mitigation</div>
+            <ul class="drawer-list">${d.mitigation.map(m => `<li>${m}</li>`).join('')}</ul>
+        </div>
+    `;
+    document.getElementById('threatDetailDrawer').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeThreatDetail() {
+    document.getElementById('threatDetailDrawer').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeThreatDetail(); });
+</script>
+{% endblock %}

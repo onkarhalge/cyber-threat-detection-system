@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENTINEL — Cyber Threat Intelligence Platform</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+</head>
+
+<body>
+
+    <!-- ═══ HEADER ════════════════════════════════════════════ -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
+                <div class="logo-text">
+                    <span class="logo-name">Sentinel</span>
+                    <span class="logo-tagline">CTI Platform v2.0</span>
+                </div>
+            </a>
+            <nav class="nav">
+                <a href="#about" class="nav-link">About</a>
+                <a href="#threats" class="nav-link">Threats</a>
+                <a href="#analysis" class="nav-link">Analyze</a>
+                <a href="#insights" class="nav-link">Insights</a>
+                <span class="nav-badge"><span class="pulse-dot"></span>Live</span>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ═══ HERO ═══════════════════════════════════════════════ -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-eyebrow"><i class="fas fa-satellite-dish"></i>&nbsp; Real-Time Threat Intelligence</div>
+            <h1>Detect &amp; Classify<br><em>Cyber Threats</em> with AI</h1>
+            <p>Powered by SVM, DistilBERT &amp; Gemini AI — analyze threat intelligence text, OTX pulses, and security
+                reports with precision.</p>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <span class="hero-stat-value">3</span>
+                    <span class="hero-stat-label">AI Models</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-value">6+</span>
+                    <span class="hero-stat-label">Threat Types</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-value">OTX</span>
+                    <span class="hero-stat-label">Integration</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-value">Real‑Time</span>
+                    <span class="hero-stat-label">Analysis</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ ABOUT / FEATURES ══════════════════════════════════ -->
+    <section id="about" class="features-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-label"><i class="fas fa-microchip"></i>&nbsp; System Capabilities</div>
+                <h2>Built for Security Professionals</h2>
+                <p>Multi-model AI pipeline with full OTX integration and Gemini-powered summaries.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card fade-in">
+                    <div class="feature-icon-wrap icon-cyan"><i class="fas fa-brain"></i></div>
+                    <h3>Dual-Stage Classification</h3>
+                    <p>SVM binary model filters noise; DistilBERT fine-tuned on CTI data assigns precise threat
+                        categories.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon-wrap icon-purple"><i class="fas fa-robot"></i></div>
+                    <h3>Gemini AI Insights</h3>
+                    <p>Every detected threat receives an analyst-grade summary: intent, technique, impact &amp;
+                        mitigations.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon-wrap icon-green"><i class="fas fa-globe"></i></div>
+                    <h3>OTX Live Feed</h3>
+                    <p>Automatically fetch and classify the latest AlienVault OTX pulses with one click.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon-wrap icon-amber"><i class="fas fa-chart-line"></i></div>
+                    <h3>Insights Dashboard</h3>
+                    <p>Interactive charts, trend analysis, confidence distributions, and category comparisons.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon-wrap icon-red"><i class="fas fa-filter"></i></div>
+                    <h3>Smart Filtering</h3>
+                    <p>Filter by category, time range, and source. Full-text search across threat data and summaries.
+                    </p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon-wrap icon-blue"><i class="fas fa-bolt"></i></div>
+                    <h3>Real-Time Processing</h3>
+                    <p>Preprocessing, classification, and AI summarization pipeline completes in seconds.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ THREAT TYPES ══════════════════════════════════════ -->
+    <section id="threats" class="threat-types-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-label"><i class="fas fa-exclamation-triangle"></i>&nbsp; Threat Taxonomy</div>
+                <h2>What We Detect</h2>
+                <p>Six primary threat categories identified through multi-label classification.</p>
+            </div>
+            <div class="threat-grid">
+                <div class="threat-card">
+                    <div class="threat-card-img">
+                        <img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=200&fit=crop"
+                            alt="DDoS">
+                        <div class="threat-card-overlay">
+                            <span class="threat-badge"><i class="fas fa-bolt"></i>&nbsp; DDoS</span>
+                        </div>
+                    </div>
+                    <div class="threat-card-body">
+                        <h3>DDoS Attack</h3>
+                        <p>Distributed denial-of-service campaigns flooding infrastructure with malicious traffic.</p>
+                    </div>
+                </div>
+                <div class="threat-card">
+                    <div class="threat-card-img">
+                        <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=200&fit=crop"
+                            alt="Botnet">
+                        <div class="threat-card-overlay">
+                            <span class="threat-badge"><i class="fas fa-network-wired"></i>&nbsp; Botnet</span>
+                        </div>
+                    </div>
+                    <div class="threat-card-body">
+                        <h3>Botnets</h3>
+                        <p>Compromised device networks remotely controlled for coordinated malicious operations.</p>
+                    </div>
+                </div>
+                <div class="threat-card">
+                    <div class="threat-card-img">
+                        <img src="https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=400&h=200&fit=crop"
+                            alt="Malware">
+                        <div class="threat-card-overlay">
+                            <span class="threat-badge"><i class="fas fa-bug"></i>&nbsp; Malware</span>
+                        </div>
+                    </div>
+                    <div class="threat-card-body">
+                        <h3>Malware</h3>
+                        <p>Malicious software engineered to disrupt, damage, or gain unauthorized system access.</p>
+                    </div>
+                </div>
+                <div class="threat-card">
+                    <div class="threat-card-img">
+                        <img src="https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=400&h=200&fit=crop"
+                            alt="Phishing">
+                        <div class="threat-card-overlay">
+                            <span class="threat-badge"><i class="fas fa-user-secret"></i>&nbsp; Phishing</span>
+                        </div>
+                    </div>
+                    <div class="threat-card-body">
+                        <h3>Phishing</h3>
+                        <p>Social engineering attacks crafted to harvest credentials and sensitive user data.</p>
+                    </div>
+                </div>
+                <div class="threat-card">
+                    <div class="threat-card-img">
+                        <img src="https://images.unsplash.com/photo-1557200134-90327ee9fafa?w=400&h=200&fit=crop"
+                            alt="Spam">
+                        <div class="threat-card-overlay">
+                            <span class="threat-badge"><i class="fas fa-envelope-open-text"></i>&nbsp; Spam</span>
+                        </div>
+                    </div>
+                    <div class="threat-card-body">
+                        <h3>Spam</h3>
+                        <p>Unsolicited bulk messages embedding malicious payloads or deceptive content.</p>
+                    </div>
+                </div>
+                <div class="threat-card">
+                    <div class="threat-card-img">
+                        <img src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=200&fit=crop"
+                            alt="Ransomware">
+                        <div class="threat-card-overlay">
+                            <span class="threat-badge"><i class="fas fa-key"></i>&nbsp; Ransomware</span>
+                        </div>
+                    </div>
+                    <div class="threat-card-body">
+                        <h3>Ransomware</h3>
+                        <p>Encryption-based extortion malware holding critical data hostage for ransom.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ ANALYSIS SECTION ══════════════════════════════════ -->
+    <section id="analysis" class="analysis-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-label"><i class="fas fa-search"></i>&nbsp; Threat Analyzer</div>
+                <h2>Analyze Intelligence</h2>
+                <p>Paste threat text or fetch live OTX pulses for instant AI-powered classification.</p>
+            </div>
+
+            <!-- Input Panel -->
+            <div class="analysis-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <div class="panel-title-icon"><i class="fas fa-keyboard"></i></div>
+                        <div>
+                            <h3>Manual Text Analysis</h3>
+                            <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">SVM + DistilBERT + Gemini
+                                pipeline</p>
+                        </div>
+                    </div>
+                    <div class="panel-actions">
+                        <button id="fetchBtn" class="btn btn-secondary">
+                            <i class="fas fa-satellite-dish"></i> Fetch OTX Pulses
+                        </button>
+                    </div>
+                </div>
+                <form id="predictForm">
+                    <textarea id="textInput"
+                        placeholder="Paste threat intelligence text, security alert, forum post, or OSINT content here...&#10;&#10;Example: A new ransomware campaign has been detected encrypting files with AES-256 and demanding 2 BTC ransom via Tor..."></textarea>
+                    <div style="display:flex; justify-content:flex-end; margin-top:12px; gap:10px;">
+                        <button type="button" class="btn btn-ghost btn-sm"
+                            onclick="document.getElementById('textInput').value=''">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search"></i> Analyze Threat
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Error display -->
+            <div id="error"></div>
+
+            <!-- Loading -->
+            <div id="loading">
+                <div class="progress-shell">
+                    <div class="progress-ring-wrap">
+                        <div class="progress-ring"></div>
+                        <div class="progress-icon"><i class="fas fa-shield-halved"></i></div>
+                    </div>
+                    <div class="progress-label" id="progressLabel">Initializing...</div>
+                    <div class="progress-steps">
+                        <div class="progress-step" id="step1"></div>
+                        <div class="progress-step" id="step2"></div>
+                        <div class="progress-step" id="step3"></div>
+                        <div class="progress-step" id="step4"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="search-bar-wrapper">
+                <i class="fas fa-search"></i>
+                <form method="GET" action="/search" style="flex:1; display:flex; align-items:center; gap:12px;">
+                    <input type="text" name="query" value="{{ search_query }}"
+                        placeholder="Search threats, summaries, categories...">
+                    <select name="category" class="select-styled" onchange="this.form.submit()">
+                        {% for cat in categories %}
+                        <option value="{{ cat }}" {% if cat==selected_category %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-ghost btn-sm"><i class="fas fa-search"></i></button>
+                </form>
+            </div>
+
+            <!-- Category filter chips -->
+            <div class="category-filter-bar">
+                <a href="/" class="filter-chip {% if selected_category == 'All' %}active{% endif %}">
+                    <i class="fas fa-th"></i> All
+                </a>
+                {% for cat in categories[1:] %}
+                <a href="/search?category={{ cat }}"
+                    class="filter-chip {% if selected_category == cat %}active{% endif %}">
+                    {{ cat }}
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- Results Header -->
+            <div class="results-header">
+                <div class="results-count">Showing <span>{{ threats|length }}</span> results{% if search_query %} for
+                    "{{ search_query }}"{% endif %}</div>
+            </div>
+
+            <!-- Overview Distribution Chart -->
+            {% if threats %}
+            <div class="overview-chart-card">
+                <div>
+                    <div class="chart-title"><i class="fas fa-chart-pie"></i>&nbsp; Threat Distribution</div>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="overallChart"></canvas>
+                        <div class="chart-center-label">
+                            <div class="chart-center-value">{{ threats|length }}</div>
+                            <div class="chart-center-sub">Total</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="flex:1;">
+                    <div class="chart-title"><i class="fas fa-list"></i>&nbsp; Category Breakdown</div>
+                    {% set ns = namespace(categories={}) %}
+                    {% for t in threats %}
+                    {% if t[6] %}
+                    {% if t[6] in ns.categories %}
+                    {% set _ = ns.categories.update({t[6]: ns.categories[t[6]] + 1}) %}
+                    {% else %}
+                    {% set _ = ns.categories.update({t[6]: 1}) %}
+                    {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
+                        {% for cat, count in ns.categories.items() %}
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div
+                                style="font-family:var(--font-mono); font-size:0.78rem; min-width:100px; color:var(--text-secondary);">
+                                {{ cat }}</div>
+                            <div
+                                style="flex:1; height:6px; background:var(--border-subtle); border-radius:3px; overflow:hidden;">
+                                <div
+                                    style="width:{{ ((count / threats|length) * 100)|round }}%; height:100%; background:var(--cyan); border-radius:3px;">
+                                </div>
+                            </div>
+                            <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">{{
+                                count }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Sections -->
+            {% set category_groups = {} %}
+            {% for t in threats %}
+            {% set cat = t[6] or 'No Category' %}
+            {% if cat not in category_groups %}
+            {% set _ = category_groups.update({cat: []}) %}
+            {% endif %}
+            {% set _ = category_groups[cat].append(t) %}
+            {% endfor %}
+
+            {% for cat, cat_threats in category_groups.items() %}
+            <div class="category-section">
+                <div class="category-header">
+                    <div class="category-dot"
+                        style="background: {% if cat == 'Ransomware' %}#f59e0b{% elif cat == 'Malware' %}#ff1a4b{% elif cat == 'Phishing' %}#a855f7{% elif cat == 'DDoS Attack' %}#00e5ff{% elif cat == 'Botnets' %}#00ffa3{% elif cat == 'Spam' %}#f97316{% else %}#64748b{% endif %};">
+                    </div>
+                    <h2>{{ cat }} <span style="font-weight:400; opacity:0.5;">({{ cat_threats|length }})</span></h2>
+                    <span class="category-count-badge">{{ cat_threats|length }} record{{ 's' if cat_threats|length != 1
+                        }}</span>
+                </div>
+
+                {% for t in cat_threats %}
+                <div class="threat-result-card" id="card-{{ t[0] }}">
+                    <div class="card-header" onclick="toggleCard({{ t[0] }})">
+                        <div class="card-status-dot {% if t[4] %}status-threat{% else %}status-clean{% endif %}"></div>
+                        <div class="card-text-preview">{{ t[2][:120] }}{% if t[2]|length > 120 %}...{% endif %}</div>
+                        <div class="card-meta">
+                            {% if t[4] %}
+                            <span class="card-category-tag"><i class="fas fa-tag"></i>&nbsp; {{ t[6] or 'Unknown'
+                                }}</span>
+                            <span class="card-conf mono">{{ "%.0f"|format(t[7]*100 if t[7] else 0) }}%</span>
+                            {% else %}
+                            <span class="card-category-tag safe"><i class="fas fa-check"></i>&nbsp; Clean</span>
+                            {% endif %}
+                            <div class="card-toggle"><i class="fas fa-chevron-down"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <!-- Original Text -->
+                        <div class="card-body-section">
+                            <h4><i class="fas fa-file-alt"></i>&nbsp; Original Text</h4>
+                            <div class="card-original-text">{{ t[2] }}</div>
+                        </div>
+
+                        <!-- AI Summary -->
+                        {% if t[8] %}
+                        <div class="card-body-section">
+                            <h4><i class="fas fa-brain"></i>&nbsp; Gemini AI Insight</h4>
+                            <div class="card-summary">{{ t[8]|safe }}</div>
+                        </div>
+                        {% else %}
+                        <div class="card-body-section">
+                            <h4><i class="fas fa-code"></i>&nbsp; Processed Text</h4>
+                            <div class="card-original-text">{{ t[3] or 'No processed data.' }}</div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Mini Charts -->
+                        {% if t[4] %}
+                        <div class="card-mini-charts">
+                            <div class="mini-chart-item">
+                                <canvas class="mini-chart-canvas" id="binChart_{{ t[0] }}"></canvas>
+                                <div class="mini-chart-info">
+                                    <h5>Binary Classification</h5>
+                                    <div class="mini-chart-value {% if t[4] %}text-red{% else %}text-green{% endif %}">
+                                        {% if t[4] %}Threat{% else %}Clean{% endif %}
+                                    </div>
+                                    <div class="mini-chart-label binary-conf">
+                                        Confidence: {{ "%.1f"|format(t[5]*100 if t[5] else 0) }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% if t[6] %}
+                            <div class="mini-chart-item">
+                                <canvas class="mini-chart-canvas" id="mcChart_{{ t[0] }}"></canvas>
+                                <div class="mini-chart-info">
+                                    <h5>Category Score</h5>
+                                    <div class="mini-chart-value text-cyan">{{ t[6] }}</div>
+                                    <div class="mini-chart-label mc-conf">
+                                        Confidence: {{ "%.1f"|format(t[7]*100 if t[7] else 0) }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-footer">
+                        <span class="card-timestamp"><i class="fas fa-clock"></i>&nbsp; {{ t[9] }}</span>
+                        {% if t[1] %}
+                        <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted);">
+                            <i class="fas fa-satellite-dish"></i>&nbsp; OTX: {{ t[1][:12] }}...
+                        </span>
+                        {% endif %}
+                        <a href="/threat/{{ t[0] }}" class="btn btn-ghost btn-sm">
+                            <i class="fas fa-external-link-alt"></i> Full Report
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            {% else %}
+            <div class="empty-state fade-in">
+                <i class="fas fa-shield-halved"></i>
+                <p>No threats in database. Analyze text above or fetch OTX pulses to get started.</p>
+            </div>
+            {% endif %}
+
+        </div>
+    </section>
+
+    <!-- ═══ INSIGHTS DASHBOARD ════════════════════════════════ -->
+    <section id="insights" class="insights-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-label"><i class="fas fa-chart-bar"></i>&nbsp; Analytics</div>
+                <h2>Insights Dashboard</h2>
+                <p>Live analytics and trend analysis across all classified threats.</p>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="insights-toolbar">
+                <span class="toolbar-label"><i class="fas fa-calendar"></i>&nbsp; Time Range</span>
+                <select id="timeFilter" class="select-styled">
+                    <option value="all">All Time</option>
+                    <option value="7d">Last 7 Days</option>
+                    <option value="30d">Last 30 Days</option>
+                    <option value="90d">Last 90 Days</option>
+                </select>
+                <span class="toolbar-label"><i class="fas fa-shield-alt"></i>&nbsp; Threat Type</span>
+                <select id="threatFilter" class="select-styled">
+                    <option value="all">All Threats</option>
+                    {% for cat in all_categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+                <div class="toolbar-spacer"></div>
+                <button id="applyFilters" class="btn btn-primary btn-sm">
+                    <i class="fas fa-filter"></i> Apply
+                </button>
+                <button id="refreshData" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+
+            <!-- Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card total-threats">
+                    <div class="metric-icon-wrap"><i class="fas fa-shield-halved"></i></div>
+                    <div>
+                        <div class="metric-value" id="totalThreats">—</div>
+                        <div class="metric-name">Total Threats</div>
+                    </div>
+                </div>
+                <div class="metric-card active-threats">
+                    <div class="metric-icon-wrap"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div>
+                        <div class="metric-value" id="activeThreats">—</div>
+                        <div class="metric-name">Active Threats</div>
+                    </div>
+                </div>
+                <div class="metric-card categories">
+                    <div class="metric-icon-wrap"><i class="fas fa-tags"></i></div>
+                    <div>
+                        <div class="metric-value" id="categoriesCount">—</div>
+                        <div class="metric-name">Categories</div>
+                    </div>
+                </div>
+                <div class="metric-card confidence">
+                    <div class="metric-icon-wrap"><i class="fas fa-percentage"></i></div>
+                    <div>
+                        <div class="metric-value" id="avgConfidence">—</div>
+                        <div class="metric-name">Avg Confidence</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="charts-grid" style="margin-bottom:16px;">
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <div class="chart-card-title"><i class="fas fa-chart-line"></i> Threat Trends Over Time</div>
+                    </div>
+                    <div class="chart-inner-lg"><canvas id="trendsChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <div class="chart-card-title"><i class="fas fa-chart-bar"></i> Confidence Distribution</div>
+                    </div>
+                    <div class="chart-inner-lg"><canvas id="confidenceChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="charts-grid-3">
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <div class="chart-card-title"><i class="fas fa-circle-dot"></i> Source Distribution</div>
+                    </div>
+                    <div class="chart-inner"><canvas id="sourceChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <div class="chart-card-title"><i class="fas fa-bars"></i> Top Categories</div>
+                    </div>
+                    <div class="chart-inner"><canvas id="topCategoriesChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <div class="chart-card-title"><i class="fas fa-scatter-plot"></i> Threat Timeline</div>
+                    </div>
+                    <div class="chart-inner"><canvas id="timelineChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="data-table-wrap">
+                <div class="data-table-header">
+                    <div class="data-table-title"><i class="fas fa-table"></i> Category Performance</div>
+                    <button class="btn btn-ghost btn-sm" onclick="loadInsightsData()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Total</th>
+                            <th>Avg Confidence</th>
+                            <th>Trend</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparisonBody">
+                        <tr>
+                            <td colspan="5"
+                                style="text-align:center;color:var(--text-muted);font-style:italic;padding:24px;">
+                                Loading data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ═══ FOOTER ════════════════════════════════════════════ -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
+                        <div class="logo-text">
+                            <span class="logo-name">Sentinel</span>
+                            <span class="logo-tagline">CTI Platform</span>
+                        </div>
+                    </div>
+                    <p>Advanced cyber threat intelligence powered by multi-model AI — SVM, DistilBERT, and Gemini
+                        working in concert.</p>
+                </div>
+                <div>
+                    <div class="footer-col-title">Capabilities</div>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-check-circle"></i> Real-time threat analysis</li>
+                        <li><i class="fas fa-check-circle"></i> OTX pulse integration</li>
+                        <li><i class="fas fa-check-circle"></i> Gemini AI summaries</li>
+                        <li><i class="fas fa-check-circle"></i> Multi-model classification</li>
+                        <li><i class="fas fa-check-circle"></i> Insights dashboard</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-col-title">Threat Types</div>
+                    <ul class="footer-links">
+                        <li>DDoS Attacks</li>
+                        <li>Botnets</li>
+                        <li>Malware</li>
+                        <li>Phishing</li>
+                        <li>Spam</li>
+                        <li>Ransomware</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Sentinel CTI Platform — Built with Flask, scikit-learn, HuggingFace &amp; Gemini AI</p>
+                <p style="color:var(--cyan); font-size:0.72rem;">v2.0.0</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script id="allCategoriesData" type="application/json">{{ all_categories|tojson }}</script>
+
+</body>
+
+</html>

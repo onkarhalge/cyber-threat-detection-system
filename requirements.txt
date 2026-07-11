@@ -1,0 +1,11 @@
+flask
+transformers
+torch
+scikit-learn
+spacy
+joblib
+numpy
+pandas
+tqdm
+gensim
+gunicorn

@@ -1,0 +1,932 @@
+{% extends "base.html" %}
+
+{% block title %}Insights — SENTINEL CTI Platform{% endblock %}
+{% block breadcrumb %}<i class="fas fa-chart-bar"></i> Insights{% endblock %}
+
+{% block head_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   INSIGHTS DASHBOARD v2 — uses site design tokens from style.css
+   (--cyan, --purple, --green, --red, --amber, --bg-*, --text-*,
+    --border-*, --shadow-*, --radius-*, --font-*)
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes insFadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes insFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes insPulseDot {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(2,132,199,0.4); }
+    70%      { box-shadow: 0 0 0 6px rgba(2,132,199,0); }
+}
+@keyframes insShimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+}
+@keyframes insSpin { to { transform: rotate(360deg); } }
+
+.ins-stagger { animation: insFadeUp 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+.ins-stagger:nth-of-type(1) { animation-delay: 0.02s; }
+.ins-stagger:nth-of-type(2) { animation-delay: 0.08s; }
+.ins-stagger:nth-of-type(3) { animation-delay: 0.14s; }
+.ins-stagger:nth-of-type(4) { animation-delay: 0.20s; }
+
+/* ── Intro banner ─────────────────────────────────────────── */
+.ins-intro {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: linear-gradient(120deg, var(--cyan-dim) 0%, var(--purple-dim) 100%);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    animation: insFadeUp 0.5s ease both;
+}
+.ins-intro-icon {
+    width: 44px; height: 44px;
+    border-radius: var(--radius);
+    background: var(--bg-surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem; color: var(--cyan);
+    flex-shrink: 0;
+    box-shadow: var(--shadow-card);
+}
+.ins-intro-text strong { color: var(--text-primary); }
+.ins-intro-text { font-size: 0.86rem; color: var(--text-secondary); line-height: 1.55; }
+.ins-intro-live {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 7px;
+    font-family: var(--font-mono); font-size: 0.7rem;
+    color: var(--green); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    white-space: nowrap;
+}
+.ins-intro-live .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green);
+    animation: insPulseDot 1.8s infinite;
+}
+
+/* ── Filter bar ───────────────────────────────────────────── */
+.filter-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 14px 20px;
+    box-shadow: var(--shadow-card);
+    margin-bottom: 16px;
+    animation: insFadeUp 0.5s ease 0.05s both;
+}
+.filter-group { display: flex; align-items: center; gap: 8px; }
+.filter-label {
+    font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted);
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 5px;
+}
+.filter-label i { color: var(--cyan); }
+
+.custom-select-wrap { position: relative; display: inline-block; }
+.custom-select-wrap select {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    background: var(--bg-base);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-body); font-size: 0.82rem; font-weight: 500;
+    padding: 7px 32px 7px 12px;
+    cursor: pointer; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    min-width: 130px;
+}
+.custom-select-wrap select:hover  { background: #eef2f7; }
+.custom-select-wrap select:focus  { border-color: var(--border-strong); box-shadow: 0 0 0 3px var(--cyan-dim); }
+.custom-select-wrap::after {
+    content: ''; pointer-events: none; position: absolute; right: 11px; top: 50%;
+    transform: translateY(-50%);
+    width: 0; height: 0;
+    border-left: 4px solid transparent; border-right: 4px solid transparent;
+    border-top: 5px solid var(--text-muted);
+    transition: transform 0.2s;
+}
+.custom-select-wrap:hover::after { border-top-color: var(--cyan); }
+
+.filter-divider { width: 1px; height: 24px; background: var(--border-subtle); margin: 0 4px; }
+.filter-actions { display: flex; gap: 8px; margin-left: auto; }
+
+/* ── Active filter chips ──────────────────────────────────── */
+.active-filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 22px; min-height: 0; }
+.active-filter-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--cyan-dim); border: 1px solid var(--border-default);
+    border-radius: 100px; padding: 4px 10px 4px 12px;
+    font-size: 0.75rem; font-weight: 500; color: var(--cyan);
+    cursor: pointer; transition: all 0.2s;
+    animation: insFadeIn 0.3s ease both;
+}
+.active-filter-chip:hover { background: var(--red-dim); border-color: rgba(220,38,38,0.25); color: var(--red); }
+.active-filter-chip i { font-size: 0.65rem; }
+
+/* ── Section headers ──────────────────────────────────────── */
+.ins-section-title {
+    font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-muted);
+    margin: 32px 0 14px; display: flex; align-items: center; gap: 9px;
+}
+.ins-section-title:first-of-type { margin-top: 0; }
+.ins-section-title i { color: var(--cyan); }
+.ins-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+.ins-section-sub {
+    font-family: var(--font-body); font-size: 0.82rem; color: var(--text-muted);
+    margin: -10px 0 16px; font-weight: 400; text-transform: none; letter-spacing: normal;
+}
+
+/* ── Metrics grid ─────────────────────────────────────────── */
+.ins-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 6px; }
+.ins-metric {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+    display: flex; align-items: center; gap: 16px;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    overflow: hidden; position: relative;
+}
+.ins-metric::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background: var(--m-color, var(--cyan));
+}
+.ins-metric:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-elevated);
+    border-color: var(--m-color, var(--cyan));
+}
+.ins-metric-icon {
+    width: 48px; height: 48px; border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem; flex-shrink: 0;
+    background: var(--m-dim, var(--cyan-dim));
+    color: var(--m-color, var(--cyan));
+    transition: transform 0.3s ease;
+}
+.ins-metric:hover .ins-metric-icon { transform: scale(1.08) rotate(-4deg); }
+.ins-metric-val {
+    font-family: var(--font-display); font-size: 1.8rem; font-weight: 800;
+    color: var(--text-primary); line-height: 1; margin-bottom: 3px;
+    font-variant-numeric: tabular-nums;
+}
+.ins-metric-label {
+    font-size: 0.74rem; color: var(--text-muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+}
+.ins-metric-hint {
+    font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3;
+}
+
+/* ── Chart grid & cards ───────────────────────────────────── */
+.ins-grid-2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin-bottom: 16px; }
+.ins-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+.ins-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.ins-card:hover { box-shadow: var(--shadow-elevated); border-color: var(--border-default); }
+
+.ins-card-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: 16px 20px 0;
+    gap: 10px;
+}
+.ins-card-title-wrap { flex: 1; min-width: 0; }
+.ins-card-title {
+    font-family: var(--font-body); font-size: 0.86rem; font-weight: 700;
+    color: var(--text-primary); display: flex; align-items: center; gap: 8px;
+}
+.ins-card-title i { color: var(--cyan); font-size: 0.8rem; }
+.ins-card-sub { font-size: 0.74rem; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+.ins-card-badge {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    background: var(--cyan-dim); color: var(--cyan);
+    border: 1px solid var(--border-default);
+    border-radius: 100px; padding: 3px 9px; white-space: nowrap; flex-shrink: 0;
+}
+.ins-card-body { padding: 14px 20px 20px; }
+
+.chart-wrap-lg { height: 250px; position: relative; }
+.chart-wrap-md { height: 210px; position: relative; }
+
+/* Legend row under chart cards explaining what each color means */
+.ins-legend-row {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px;
+    padding-top: 12px; border-top: 1px solid var(--border-subtle);
+}
+.ins-legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.74rem; color: var(--text-secondary);
+}
+.ins-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Insight callout (auto-generated takeaway) ───────────── */
+.ins-callout {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--amber-dim);
+    border: 1px solid rgba(217,119,6,0.25);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-top: 14px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+.ins-callout.good { background: var(--green-dim); border-color: rgba(22,163,74,0.25); }
+.ins-callout i { color: var(--amber); margin-top: 2px; flex-shrink: 0; }
+.ins-callout.good i { color: var(--green); }
+.ins-callout strong { color: var(--text-primary); }
+
+/* ── Data Table ───────────────────────────────────────────── */
+.ins-table-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    margin-bottom: 48px;
+}
+.ins-table-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid var(--border-subtle);
+    gap: 12px; flex-wrap: wrap;
+}
+.ins-table-title { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+.ins-table-title i { color: var(--cyan); }
+.ins-table-sub { font-size: 0.76rem; color: var(--text-muted); margin-top: 2px; font-weight: 400; }
+
+.ins-table-search { position: relative; flex: 0 0 220px; }
+.ins-table-search input {
+    width: 100%; background: var(--bg-base);
+    border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
+    padding: 7px 12px 7px 32px; font-size: 0.8rem; font-family: var(--font-body);
+    color: var(--text-primary); outline: none; transition: border-color 0.2s;
+}
+.ins-table-search input:focus { border-color: var(--border-strong); }
+.ins-table-search i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.72rem; }
+
+.ins-table-wrap { overflow-x: auto; }
+.ins-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+.ins-table thead th {
+    background: var(--bg-base); padding: 11px 16px; text-align: left;
+    font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted);
+    border-bottom: 1px solid var(--border-subtle); white-space: nowrap;
+    cursor: pointer; user-select: none; transition: color 0.2s;
+}
+.ins-table thead th:hover { color: var(--cyan); }
+.ins-table thead th.sort-asc::after  { content: ' ↑'; color: var(--cyan); }
+.ins-table thead th.sort-desc::after { content: ' ↓'; color: var(--cyan); }
+.ins-table tbody tr { border-bottom: 1px solid var(--border-subtle); transition: background 0.15s; }
+.ins-table tbody tr:last-child { border-bottom: none; }
+.ins-table tbody tr:hover { background: var(--bg-base); }
+.ins-table td { padding: 13px 16px; vertical-align: middle; color: var(--text-primary); }
+.ins-table td:first-child { font-weight: 600; }
+
+.td-cat { display: flex; align-items: center; gap: 9px; }
+.td-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 3px currentColor; opacity: 0.95; }
+
+.conf-bar-wrap { display: flex; align-items: center; gap: 10px; }
+.conf-bar-track { flex: 1; height: 6px; background: var(--bg-base); border-radius: 10px; overflow: hidden; min-width: 70px; }
+.conf-bar-fill { height: 100%; border-radius: 10px; transition: width 1s cubic-bezier(0.22,1,0.36,1); }
+.conf-val { font-family: var(--font-mono); font-size: 0.76rem; font-weight: 700; white-space: nowrap; min-width: 40px; text-align: right; }
+
+.status-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: var(--font-mono); font-size: 0.66rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 4px 10px; border-radius: 100px;
+}
+.status-pill.critical { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(220,38,38,0.2); }
+.status-pill.warning  { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(217,119,6,0.2); }
+.status-pill.active   { background: var(--green-dim); color: var(--green); border: 1px solid rgba(22,163,74,0.2); }
+.status-pill::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+.trend-up   { color: var(--red);   font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; }
+.trend-down { color: var(--green); font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; }
+.trend-flat { color: var(--text-muted); font-family: var(--font-mono); font-size: 0.78rem; }
+
+.ins-empty { text-align: center; padding: 52px 24px; color: var(--text-muted); }
+.ins-empty i { font-size: 2.2rem; margin-bottom: 14px; display: block; opacity: 0.35; }
+.ins-empty p { font-size: 0.9rem; }
+.ins-empty .fa-spin { animation: insSpin 0.9s linear infinite; }
+
+/* ── Skeleton loading ─────────────────────────────────────── */
+.skeleton {
+    background: linear-gradient(90deg, var(--bg-base) 25%, #e2e8f0 50%, var(--bg-base) 75%);
+    background-size: 800px 100%;
+    animation: insShimmer 1.4s infinite linear;
+    border-radius: 6px;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .ins-grid-2, .ins-grid-3 { grid-template-columns: 1fr 1fr; }
+    .ins-metrics { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+    .ins-grid-2, .ins-grid-3 { grid-template-columns: 1fr; }
+    .ins-metrics { grid-template-columns: repeat(2, 1fr); }
+    .filter-bar { flex-direction: column; align-items: flex-start; }
+    .filter-actions { margin-left: 0; width: 100%; }
+    .filter-actions .btn { flex: 1; justify-content: center; }
+    .ins-table-header { flex-direction: column; align-items: flex-start; }
+    .ins-table-search { flex: 1 1 100%; }
+    .ins-intro { flex-wrap: wrap; }
+    .ins-intro-live { margin-left: 0; }
+}
+@media (max-width: 480px) {
+    .ins-metrics { grid-template-columns: 1fr; }
+    .chart-wrap-lg, .chart-wrap-md { height: 200px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero-pad" style="padding-bottom: 60px;">
+<div class="container">
+
+    <!-- ── Page heading ──────────────────────────────────── -->
+    <div class="section-header">
+        <div class="section-label"><i class="fas fa-chart-bar"></i>&nbsp; Analytics</div>
+        <h2>Insights Dashboard</h2>
+        <p>Real-time analytics, confidence metrics, and trend analysis across all classified threats.</p>
+    </div>
+
+    <!-- ── Friendly intro / how-to-read banner ─────────────── -->
+    <div class="ins-intro">
+        <div class="ins-intro-icon"><i class="fas fa-lightbulb"></i></div>
+        <div class="ins-intro-text">
+            <strong>How to read this page:</strong> the cards below summarize everything Sentinel has classified.
+            Use the filters to narrow by time, threat type, or source — every chart and the table update together.
+        </div>
+        <div class="ins-intro-live"><span class="dot"></span> Live data</div>
+    </div>
+
+    <!-- ── Filter Bar ────────────────────────────────────── -->
+    <div class="filter-bar" id="filterBar">
+        <div class="filter-group">
+            <span class="filter-label"><i class="fas fa-calendar-alt"></i> Period</span>
+            <div class="custom-select-wrap">
+                <select id="timeFilter">
+                    <option value="all">All time</option>
+                    <option value="7d">Last 7 days</option>
+                    <option value="30d">Last 30 days</option>
+                    <option value="90d">Last 90 days</option>
+                </select>
+            </div>
+        </div>
+        <div class="filter-divider"></div>
+        <div class="filter-group">
+            <span class="filter-label"><i class="fas fa-shield-alt"></i> Threat type</span>
+            <div class="custom-select-wrap">
+                <select id="threatFilter">
+                    <option value="all">All types</option>
+                    {% for cat in all_categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="filter-divider"></div>
+        <div class="filter-group">
+            <span class="filter-label"><i class="fas fa-satellite-dish"></i> Source</span>
+            <div class="custom-select-wrap">
+                <select id="sourceFilter">
+                    <option value="all">All sources</option>
+                    <option value="otx">OTX only</option>
+                    <option value="manual">Manual only</option>
+                </select>
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button id="applyFilters" class="btn btn-primary btn-sm"><i class="fas fa-check"></i> Apply</button>
+            <button id="resetFilters" class="btn btn-ghost btn-sm"><i class="fas fa-undo"></i> Reset</button>
+        </div>
+    </div>
+
+    <div class="active-filters" id="activeFilters"></div>
+
+    <!-- ── Metrics ───────────────────────────────────────── -->
+    <div class="ins-section-title"><i class="fas fa-tachometer-alt"></i> Key Metrics</div>
+    <p class="ins-section-sub">A quick health check — these four numbers summarize the entire filtered dataset.</p>
+
+    <div class="ins-metrics">
+        <div class="ins-metric ins-stagger" style="--m-color:var(--cyan); --m-dim:var(--cyan-dim)">
+            <div class="ins-metric-icon"><i class="fas fa-shield-halved"></i></div>
+            <div>
+                <div class="ins-metric-val" id="mTotal">—</div>
+                <div class="ins-metric-label">Total Threats</div>
+                <div class="ins-metric-hint">All classified records in range</div>
+            </div>
+        </div>
+        <div class="ins-metric ins-stagger" style="--m-color:var(--red); --m-dim:var(--red-dim)">
+            <div class="ins-metric-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div>
+                <div class="ins-metric-val" id="mActive">—</div>
+                <div class="ins-metric-label">Active Threats</div>
+                <div class="ins-metric-hint">Flagged malicious / relevant</div>
+            </div>
+        </div>
+        <div class="ins-metric ins-stagger" style="--m-color:var(--purple); --m-dim:var(--purple-dim)">
+            <div class="ins-metric-icon"><i class="fas fa-tags"></i></div>
+            <div>
+                <div class="ins-metric-val" id="mCats">—</div>
+                <div class="ins-metric-label">Categories Seen</div>
+                <div class="ins-metric-hint">Distinct threat types found</div>
+            </div>
+        </div>
+        <div class="ins-metric ins-stagger" style="--m-color:var(--green); --m-dim:var(--green-dim)">
+            <div class="ins-metric-icon"><i class="fas fa-crosshairs"></i></div>
+            <div>
+                <div class="ins-metric-val" id="mConf">—</div>
+                <div class="ins-metric-label">Avg Confidence</div>
+                <div class="ins-metric-hint">Model certainty, higher is better</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Charts row 1 ──────────────────────────────────── -->
+    <div class="ins-section-title"><i class="fas fa-chart-line"></i> Threat Activity</div>
+    <p class="ins-section-sub">When threats are arriving, and how sure the model is about each call.</p>
+
+    <div class="ins-grid-2">
+        <div class="ins-card">
+            <div class="ins-card-header">
+                <div class="ins-card-title-wrap">
+                    <div class="ins-card-title"><i class="fas fa-chart-line"></i> Threats Over Time</div>
+                    <div class="ins-card-sub">Number of new classified threats per day in the selected period.</div>
+                </div>
+                <span class="ins-card-badge" id="trendsBadge">—</span>
+            </div>
+            <div class="ins-card-body">
+                <div class="chart-wrap-lg"><canvas id="trendsChart"></canvas></div>
+                <div class="ins-callout" id="trendsCallout" style="display:none;"></div>
+            </div>
+        </div>
+        <div class="ins-card">
+            <div class="ins-card-header">
+                <div class="ins-card-title-wrap">
+                    <div class="ins-card-title"><i class="fas fa-chart-bar"></i> Confidence Distribution</div>
+                    <div class="ins-card-sub">How confident the AI was for each classified threat.</div>
+                </div>
+                <span class="ins-card-badge">5 bands</span>
+            </div>
+            <div class="ins-card-body">
+                <div class="chart-wrap-lg"><canvas id="confidenceChart"></canvas></div>
+                <div class="ins-legend-row">
+                    <div class="ins-legend-item"><span class="ins-legend-dot" style="background:var(--red)"></span> Low (0–40%)</div>
+                    <div class="ins-legend-item"><span class="ins-legend-dot" style="background:var(--amber)"></span> Medium (41–60%)</div>
+                    <div class="ins-legend-item"><span class="ins-legend-dot" style="background:var(--green)"></span> High (61–100%)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Charts row 2 ──────────────────────────────────── -->
+    <div class="ins-section-title"><i class="fas fa-layer-group"></i> Breakdown</div>
+    <p class="ins-section-sub">What kinds of threats are showing up, and where the data is coming from.</p>
+
+    <div class="ins-grid-3">
+        <div class="ins-card">
+            <div class="ins-card-header">
+                <div class="ins-card-title-wrap">
+                    <div class="ins-card-title"><i class="fas fa-chart-pie"></i> Category Share</div>
+                    <div class="ins-card-sub">Proportion of each threat type.</div>
+                </div>
+            </div>
+            <div class="ins-card-body">
+                <div class="chart-wrap-md"><canvas id="categoryChart"></canvas></div>
+            </div>
+        </div>
+        <div class="ins-card">
+            <div class="ins-card-header">
+                <div class="ins-card-title-wrap">
+                    <div class="ins-card-title"><i class="fas fa-database"></i> Source Split</div>
+                    <div class="ins-card-sub">Manually pasted text vs. live OTX feed.</div>
+                </div>
+            </div>
+            <div class="ins-card-body">
+                <div class="chart-wrap-md"><canvas id="sourceChart"></canvas></div>
+            </div>
+        </div>
+        <div class="ins-card">
+            <div class="ins-card-header">
+                <div class="ins-card-title-wrap">
+                    <div class="ins-card-title"><i class="fas fa-bars"></i> Top Categories</div>
+                    <div class="ins-card-sub">Most frequently detected threat types.</div>
+                </div>
+            </div>
+            <div class="ins-card-body">
+                <div class="chart-wrap-md"><canvas id="topCategoriesChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Table ─────────────────────────────────────────── -->
+    <div class="ins-section-title"><i class="fas fa-table"></i> Category Performance</div>
+    <p class="ins-section-sub">Sort any column by clicking its header. Search narrows the rows shown below.</p>
+
+    <div class="ins-table-card">
+        <div class="ins-table-header">
+            <div>
+                <div class="ins-table-title"><i class="fas fa-table-columns"></i> Breakdown by Category</div>
+                <div class="ins-table-sub">Click a column header to sort, or search to filter rows.</div>
+            </div>
+            <div class="ins-table-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="tableSearch" placeholder="Filter table...">
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadInsightsData()"><i class="fas fa-sync"></i> Refresh</button>
+        </div>
+        <div class="ins-table-wrap">
+            <table class="ins-table" id="insTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('category')">Category</th>
+                        <th onclick="sortTable('total')">Records</th>
+                        <th onclick="sortTable('avgConfidence')" style="min-width:170px;">Avg Confidence</th>
+                        <th onclick="sortTable('trend')">Trend</th>
+                        <th onclick="sortTable('status')">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="insTableBody">
+                    <tr><td colspan="5" class="ins-empty">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                        <p>Loading data…</p>
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</section>
+{% endblock %}
+
+{% block body_scripts %}
+<script>
+/* ============================================================
+   INSIGHTS DASHBOARD v2 — Interactive JS
+   ============================================================ */
+
+const CAT_COLORS = {
+    'Ransomware':  '#d97706',
+    'Malware':     '#dc2626',
+    'Phishing':    '#7c3aed',
+    'DDoS Attack': '#0284c7',
+    'Botnets':     '#16a34a',
+    'Spam':        '#f97316',
+};
+const PALETTE = ['#0284c7','#dc2626','#7c3aed','#16a34a','#d97706','#f97316','#06b6d4','#64748b'];
+function catColor(cat, i) { return CAT_COLORS[cat] || PALETTE[i % PALETTE.length] || '#64748b'; }
+
+Chart.defaults.color       = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(15,23,42,0.05)';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size   = 11;
+
+const chartInstances = {};
+function destroyChart(id) { if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; } }
+
+const tooltipDefaults = {
+    backgroundColor: '#ffffff',
+    titleColor:      '#0f172a',
+    bodyColor:       '#475569',
+    borderColor:     'rgba(15,23,42,0.1)',
+    borderWidth:     1,
+    padding:         12,
+    cornerRadius:    10,
+    displayColors:   true,
+    titleFont: { weight: '700', size: 12 },
+    bodyFont:  { size: 11.5 },
+};
+
+/* ── Trend line ───────────────────────────────────────────── */
+function buildTrendsChart(labels, data) {
+    destroyChart('trends');
+    const ctx = document.getElementById('trendsChart');
+    if (!ctx) return;
+
+    const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 250);
+    gradient.addColorStop(0, 'rgba(2,132,199,0.20)');
+    gradient.addColorStop(1, 'rgba(2,132,199,0)');
+
+    chartInstances.trends = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets: [{
+            label: 'Threats', data,
+            borderColor: '#0284c7', backgroundColor: gradient,
+            borderWidth: 2.5,
+            pointRadius: data.length < 30 ? 4 : 0,
+            pointHoverRadius: 7,
+            pointBackgroundColor: '#0284c7', pointBorderColor: '#fff', pointBorderWidth: 2,
+            tension: 0.42, fill: true,
+        }]},
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            animation: { duration: 800, easing: 'easeOutQuart' },
+            plugins: {
+                legend: { display: false },
+                tooltip: { ...tooltipDefaults, callbacks: {
+                    title: items => items[0].label,
+                    label: item => ` ${item.parsed.y} threat${item.parsed.y !== 1 ? 's' : ''} detected`
+                }}
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { maxTicksLimit: 8 }, border: { display: false } },
+                y: { beginAtZero: true, grid: { color: 'rgba(15,23,42,0.05)' }, border: { display: false }, ticks: { precision: 0 } }
+            }
+        }
+    });
+
+    const badge = document.getElementById('trendsBadge');
+    if (badge) badge.textContent = `${data.length} day${data.length !== 1 ? 's' : ''}`;
+
+    // Auto-generated takeaway
+    const callout = document.getElementById('trendsCallout');
+    if (callout && data.length >= 2) {
+        const last = data[data.length - 1], prev = data[data.length - 2];
+        const peak = Math.max(...data);
+        const peakIdx = data.indexOf(peak);
+        let html, good = false;
+        if (last > prev) {
+            html = `<i class="fas fa-arrow-trend-up"></i><span><strong>Trending up</strong> — ${last} threats on the latest day vs ${prev} the day before. Peak day was <strong>${labels[peakIdx]}</strong> with ${peak}.</span>`;
+        } else if (last < prev) {
+            html = `<i class="fas fa-arrow-trend-down"></i><span><strong>Trending down</strong> — activity eased to ${last} from ${prev}. Peak day was <strong>${labels[peakIdx]}</strong> with ${peak}.</span>`;
+            good = true;
+        } else {
+            html = `<i class="fas fa-minus"></i><span><strong>Holding steady</strong> at ${last} threats per day. Peak day was <strong>${labels[peakIdx]}</strong> with ${peak}.</span>`;
+            good = true;
+        }
+        callout.innerHTML = html;
+        callout.className = 'ins-callout' + (good ? ' good' : '');
+        callout.style.display = 'flex';
+    } else if (callout) {
+        callout.style.display = 'none';
+    }
+}
+
+/* ── Confidence bars ─────────────────────────────────────── */
+function buildConfidenceChart(dist) {
+    destroyChart('confidence');
+    const ctx = document.getElementById('confidenceChart');
+    if (!ctx) return;
+    const labels = ['0–20%', '21–40%', '41–60%', '61–80%', '81–100%'];
+    const colors = ['#dc2626', '#f97316', '#d97706', '#0284c7', '#16a34a'];
+
+    chartInstances.confidence = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Threats', data: dist, backgroundColor: colors, borderRadius: 7, borderSkipped: false }]},
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            animation: { duration: 700, easing: 'easeOutQuart' },
+            plugins: { legend: { display: false }, tooltip: { ...tooltipDefaults, callbacks: {
+                label: item => ` ${item.parsed.y} threat${item.parsed.y !== 1 ? 's' : ''}`
+            }}},
+            scales: {
+                x: { grid: { display: false }, border: { display: false } },
+                y: { beginAtZero: true, grid: { color: 'rgba(15,23,42,0.05)' }, border: { display: false }, ticks: { precision: 0 } }
+            }
+        }
+    });
+}
+
+/* ── Category doughnut ───────────────────────────────────── */
+function buildCategoryChart(labels, data) {
+    destroyChart('category');
+    const ctx = document.getElementById('categoryChart');
+    if (!ctx) return;
+    chartInstances.category = new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels, datasets: [{
+            data, backgroundColor: labels.map((l,i) => catColor(l,i)),
+            borderWidth: 0, hoverBorderColor: '#fff', hoverBorderWidth: 3, hoverOffset: 6,
+        }]},
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '62%',
+            animation: { duration: 700, easing: 'easeOutQuart' },
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, pointStyleWidth: 8, font: { size: 10 } } },
+                tooltip: { ...tooltipDefaults, callbacks: {
+                    label: item => {
+                        const total = item.dataset.data.reduce((a,b) => a+b, 0);
+                        const pct = total ? ((item.parsed / total) * 100).toFixed(1) : 0;
+                        return ` ${item.label}: ${item.parsed} (${pct}%)`;
+                    }
+                }}
+            }
+        }
+    });
+}
+
+/* ── Source pie ───────────────────────────────────────────── */
+function buildSourceChart(labels, data) {
+    destroyChart('source');
+    const ctx = document.getElementById('sourceChart');
+    if (!ctx) return;
+    chartInstances.source = new Chart(ctx, {
+        type: 'pie',
+        data: { labels, datasets: [{
+            data, backgroundColor: ['#0284c7', '#7c3aed', '#16a34a', '#d97706'],
+            borderWidth: 0, hoverBorderColor: '#fff', hoverBorderWidth: 3, hoverOffset: 6,
+        }]},
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: { duration: 700, easing: 'easeOutQuart' },
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, pointStyleWidth: 8, font: { size: 10 } } },
+                tooltip: { ...tooltipDefaults }
+            }
+        }
+    });
+}
+
+/* ── Top categories horizontal bar ───────────────────────── */
+function buildTopCategoriesChart(labels, data) {
+    destroyChart('topCategories');
+    const ctx = document.getElementById('topCategoriesChart');
+    if (!ctx) return;
+    chartInstances.topCategories = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Count', data, backgroundColor: labels.map((l,i) => catColor(l,i)), borderRadius: 6, borderSkipped: false }]},
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            animation: { duration: 700, easing: 'easeOutQuart' },
+            plugins: { legend: { display: false }, tooltip: { ...tooltipDefaults } },
+            scales: {
+                x: { beginAtZero: true, grid: { color: 'rgba(15,23,42,0.05)' }, border: { display: false }, ticks: { precision: 0 } },
+                y: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 11 } } }
+            }
+        }
+    });
+}
+
+/* ── Table ────────────────────────────────────────────────── */
+let tableData = [];
+let tableSortKey = 'total';
+let tableSortAsc = false;
+
+function buildTable(rows) { tableData = rows; renderTable(); }
+
+function renderTable() {
+    const query = (document.getElementById('tableSearch')?.value || '').toLowerCase();
+    let rows = tableData.filter(r => !query || r.category.toLowerCase().includes(query));
+
+    rows = rows.sort((a, b) => {
+        let va = a[tableSortKey], vb = b[tableSortKey];
+        if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+        return tableSortAsc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+    });
+
+    document.querySelectorAll('.ins-table thead th').forEach(th => th.classList.remove('sort-asc','sort-desc'));
+    const thMap = { category: 0, total: 1, avgConfidence: 2, trend: 3, status: 4 };
+    const ths = document.querySelectorAll('.ins-table thead th');
+    if (ths[thMap[tableSortKey]]) ths[thMap[tableSortKey]].classList.add(tableSortAsc ? 'sort-asc' : 'sort-desc');
+
+    const tbody = document.getElementById('insTableBody');
+    if (!tbody) return;
+
+    if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="ins-empty"><i class="fas fa-inbox"></i><p>No data matches the current filters.</p></div></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = rows.map((r, i) => {
+        const color = catColor(r.category, i);
+        const confPct = Math.min(r.avgConfidence, 100);
+        const trendHtml = r.trend > 0
+            ? `<span class="trend-up"><i class="fas fa-arrow-up"></i> ${r.trend}%</span>`
+            : r.trend < 0
+            ? `<span class="trend-down"><i class="fas fa-arrow-down"></i> ${Math.abs(r.trend)}%</span>`
+            : `<span class="trend-flat">— stable</span>`;
+
+        return `<tr style="animation: insFadeIn 0.3s ease ${i * 0.03}s both;">
+            <td><div class="td-cat"><span class="td-dot" style="background:${color}; color:${color}"></span><span>${r.category}</span></div></td>
+            <td style="font-family:var(--font-mono); font-weight:700; color:var(--text-primary);">${r.total}</td>
+            <td><div class="conf-bar-wrap">
+                <div class="conf-bar-track"><div class="conf-bar-fill" style="width:${confPct}%; background: linear-gradient(90deg, ${color}99, ${color});"></div></div>
+                <span class="conf-val" style="color:${color}">${r.avgConfidence}%</span>
+            </div></td>
+            <td>${trendHtml}</td>
+            <td><span class="status-pill ${r.status}">${r.status}</span></td>
+        </tr>`;
+    }).join('');
+}
+
+function sortTable(key) {
+    if (tableSortKey === key) tableSortAsc = !tableSortAsc;
+    else { tableSortKey = key; tableSortAsc = false; }
+    renderTable();
+}
+
+/* ── Metrics animated count-up ───────────────────────────── */
+function animCount(id, target, suffix = '') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const start = performance.now(), dur = 900;
+    const step = now => {
+        const p = Math.min((now - start) / dur, 1);
+        const val = Math.round(target * (1 - Math.pow(1 - p, 3)));
+        el.textContent = val + suffix;
+        if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+}
+
+/* ── Active filter chips ─────────────────────────────────── */
+function renderFilterChips() {
+    const wrap = document.getElementById('activeFilters');
+    if (!wrap) return;
+    const chips = [];
+    const t = document.getElementById('timeFilter')?.value;
+    const labels = { '7d': 'Last 7 days', '30d': 'Last 30 days', '90d': 'Last 90 days' };
+    if (t && t !== 'all') chips.push({ key: 'time', label: labels[t] || t });
+    const th = document.getElementById('threatFilter')?.value;
+    if (th && th !== 'all') chips.push({ key: 'threat', label: th });
+    const s = document.getElementById('sourceFilter')?.value;
+    if (s && s !== 'all') chips.push({ key: 'source', label: s === 'otx' ? 'OTX only' : 'Manual only' });
+
+    wrap.innerHTML = chips.map(c => `<span class="active-filter-chip" onclick="clearFilter('${c.key}')">${c.label} <i class="fas fa-times"></i></span>`).join('');
+}
+
+function clearFilter(key) {
+    const map = { time: 'timeFilter', threat: 'threatFilter', source: 'sourceFilter' };
+    const el = document.getElementById(map[key]);
+    if (el) el.value = 'all';
+    renderFilterChips();
+    loadInsightsData();
+}
+
+/* ── Load / Refresh ───────────────────────────────────────── */
+async function loadInsightsData() {
+    const time   = document.getElementById('timeFilter')?.value   || 'all';
+    const threat = document.getElementById('threatFilter')?.value || 'all';
+    const source = document.getElementById('sourceFilter')?.value || 'all';
+    renderFilterChips();
+
+    try {
+        const params = new URLSearchParams({ time, threat, source });
+        const res = await fetch(`/api/insights?${params}`);
+        if (!res.ok) throw new Error('API error');
+        const d = await res.json();
+
+        animCount('mTotal',  d.metrics.total);
+        animCount('mActive', d.metrics.active);
+        animCount('mCats',   d.metrics.categories);
+        const confEl = document.getElementById('mConf');
+        if (confEl) setTimeout(() => confEl.textContent = d.metrics.avgConfidence + '%', 100);
+
+        buildTrendsChart(d.trends.labels, d.trends.data);
+        buildConfidenceChart(d.confidenceDistribution);
+        buildCategoryChart(d.topCategories.labels, d.topCategories.data);
+        buildSourceChart(d.sourceDistribution.labels, d.sourceDistribution.data);
+        buildTopCategoriesChart(d.topCategories.labels, d.topCategories.data);
+        buildTable(d.comparison);
+
+    } catch (err) {
+        console.warn('Insights load failed:', err);
+        document.getElementById('insTableBody').innerHTML = `
+            <tr><td colspan="5"><div class="ins-empty">
+                <i class="fas fa-exclamation-triangle"></i><p>Could not load data. Check the API connection.</p>
+            </div></td></tr>`;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('applyFilters')?.addEventListener('click', loadInsightsData);
+    document.getElementById('resetFilters')?.addEventListener('click', () => {
+        ['timeFilter','threatFilter','sourceFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = 'all'; });
+        renderFilterChips();
+        loadInsightsData();
+    });
+    document.getElementById('tableSearch')?.addEventListener('input', renderTable);
+    ['timeFilter','threatFilter','sourceFilter'].forEach(id => document.getElementById(id)?.addEventListener('change', renderFilterChips));
+    loadInsightsData();
+});
+</script>
+{% endblock %}

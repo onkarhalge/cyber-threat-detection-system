@@ -1,0 +1,502 @@
+{% extends "base.html" %}
+
+{% block title %}Emerging Threats — SENTINEL CTI Platform{% endblock %}
+{% block breadcrumb %}<i class="fas fa-wave-square"></i> Emerging Threats{% endblock %}
+
+{% block head_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   EMERGING THREATS — LDA Topic Modeling
+   Uses site design tokens from style.css (--cyan, --purple, --green,
+   --red, --amber, --bg-*, --text-*, --border-*, --shadow-*, --radius-*,
+   --font-*) — same visual language as the Insights dashboard.
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes emtFadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes emtFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes emtPulseDot {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(2,132,199,0.4); }
+    70%      { box-shadow: 0 0 0 6px rgba(2,132,199,0); }
+}
+@keyframes emtSpin { to { transform: rotate(360deg); } }
+
+.emt-stagger { animation: emtFadeUp 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+.emt-stagger:nth-of-type(1) { animation-delay: 0.02s; }
+.emt-stagger:nth-of-type(2) { animation-delay: 0.08s; }
+.emt-stagger:nth-of-type(3) { animation-delay: 0.14s; }
+.emt-stagger:nth-of-type(4) { animation-delay: 0.20s; }
+.emt-stagger:nth-of-type(5) { animation-delay: 0.26s; }
+
+/* ── Intro banner ─────────────────────────────────────────── */
+.emt-intro {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: linear-gradient(120deg, var(--purple-dim) 0%, var(--cyan-dim) 100%);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    animation: emtFadeUp 0.5s ease both;
+}
+.emt-intro-icon {
+    width: 44px; height: 44px;
+    border-radius: var(--radius);
+    background: var(--bg-surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem; color: var(--purple);
+    flex-shrink: 0;
+    box-shadow: var(--shadow-card);
+}
+.emt-intro-text strong { color: var(--text-primary); }
+.emt-intro-text { font-size: 0.86rem; color: var(--text-secondary); line-height: 1.6; }
+.emt-intro-text p { margin: 0 0 6px; }
+.emt-intro-text p:last-child { margin-bottom: 0; }
+.emt-intro-live {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 7px;
+    font-family: var(--font-mono); font-size: 0.7rem;
+    color: var(--green); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    white-space: nowrap; flex-shrink: 0;
+}
+.emt-intro-live .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green);
+    animation: emtPulseDot 1.8s infinite;
+}
+
+/* ── Controls bar ─────────────────────────────────────────── */
+.filter-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 14px 20px;
+    box-shadow: var(--shadow-card);
+    margin-bottom: 24px;
+    animation: emtFadeUp 0.5s ease 0.05s both;
+}
+.filter-group { display: flex; align-items: center; gap: 8px; }
+.filter-label {
+    font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted);
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 5px;
+}
+.filter-label i { color: var(--purple); }
+
+.custom-select-wrap { position: relative; display: inline-block; }
+.custom-select-wrap select {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    background: var(--bg-base);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-body); font-size: 0.82rem; font-weight: 500;
+    padding: 7px 32px 7px 12px;
+    cursor: pointer; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    min-width: 130px;
+}
+.custom-select-wrap select:hover  { background: #eef2f7; }
+.custom-select-wrap select:focus  { border-color: var(--border-strong); box-shadow: 0 0 0 3px var(--purple-dim); }
+.custom-select-wrap::after {
+    content: ''; pointer-events: none; position: absolute; right: 11px; top: 50%;
+    transform: translateY(-50%);
+    width: 0; height: 0;
+    border-left: 4px solid transparent; border-right: 4px solid transparent;
+    border-top: 5px solid var(--text-muted);
+    transition: transform 0.2s;
+}
+.custom-select-wrap:hover::after { border-top-color: var(--purple); }
+
+.filter-divider { width: 1px; height: 24px; background: var(--border-subtle); margin: 0 4px; }
+.filter-actions { display: flex; gap: 8px; margin-left: auto; }
+
+/* ── Section headers ──────────────────────────────────────── */
+.emt-section-title {
+    font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-muted);
+    margin: 32px 0 14px; display: flex; align-items: center; gap: 9px;
+}
+.emt-section-title:first-of-type { margin-top: 0; }
+.emt-section-title i { color: var(--purple); }
+.emt-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+
+/* ── Signal callout (auto-generated takeaway) ────────────── */
+.emt-signal {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--amber-dim);
+    border: 1px solid rgba(217,119,6,0.25);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-card);
+    animation: emtFadeUp 0.5s ease 0.1s both;
+}
+.emt-signal.up   { background: var(--red-dim);   border-color: rgba(220,38,38,0.22); }
+.emt-signal.down { background: var(--green-dim); border-color: rgba(22,163,74,0.22); }
+.emt-signal-icon {
+    width: 40px; height: 40px; border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.05rem; flex-shrink: 0;
+    background: var(--bg-surface); color: var(--amber);
+    box-shadow: var(--shadow-card);
+}
+.emt-signal.up   .emt-signal-icon { color: var(--red); }
+.emt-signal.down .emt-signal-icon { color: var(--green); }
+.emt-signal-body { flex: 1; }
+.emt-signal-label {
+    font-family: var(--font-mono); font-size: 0.66rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted);
+    margin-bottom: 4px;
+}
+.emt-signal-text { font-size: 0.88rem; color: var(--text-primary); line-height: 1.55; }
+.emt-signal-text strong { color: var(--text-primary); }
+
+/* ── Chart card ───────────────────────────────────────────── */
+.emt-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    margin-bottom: 24px;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.emt-card:hover { box-shadow: var(--shadow-elevated); border-color: var(--border-default); }
+.emt-card-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: 18px 22px 0; gap: 10px;
+}
+.emt-card-title-wrap { flex: 1; min-width: 0; }
+.emt-card-title {
+    font-family: var(--font-body); font-size: 0.92rem; font-weight: 700;
+    color: var(--text-primary); display: flex; align-items: center; gap: 8px;
+}
+.emt-card-title i { color: var(--purple); font-size: 0.85rem; }
+.emt-card-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+.emt-card-badge {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    background: var(--purple-dim); color: var(--purple);
+    border: 1px solid var(--border-default);
+    border-radius: 100px; padding: 3px 9px; white-space: nowrap; flex-shrink: 0;
+}
+.emt-card-body { padding: 16px 22px 22px; }
+.chart-wrap-xl { height: 320px; position: relative; }
+
+.emt-legend-row {
+    display: flex; flex-wrap: wrap; gap: 12px 18px; margin-top: 16px;
+    padding-top: 14px; border-top: 1px solid var(--border-subtle);
+}
+.emt-legend-item {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 0.78rem; color: var(--text-secondary);
+    cursor: default;
+}
+.emt-legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Topic keyword cards ─────────────────────────────────── */
+.emt-topics-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px; margin-bottom: 8px;
+}
+.emt-topic-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-left: 4px solid var(--t-color, var(--purple));
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.emt-topic-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-elevated); }
+.emt-topic-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.emt-topic-num {
+    width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+    background: var(--t-dim, var(--purple-dim)); color: var(--t-color, var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700;
+}
+.emt-topic-label {
+    font-size: 0.88rem; font-weight: 700; color: var(--text-primary);
+    line-height: 1.3;
+}
+.emt-topic-keywords { display: flex; flex-wrap: wrap; gap: 6px; }
+.emt-kw-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--bg-base); border: 1px solid var(--border-subtle);
+    border-radius: 100px; padding: 4px 10px;
+    font-size: 0.74rem; color: var(--text-secondary);
+}
+.emt-kw-pill .w { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); }
+
+/* ── Empty / loading states ───────────────────────────────── */
+.emt-empty { text-align: center; padding: 60px 24px; color: var(--text-muted); }
+.emt-empty i { font-size: 2.4rem; margin-bottom: 16px; display: block; opacity: 0.35; }
+.emt-empty p { font-size: 0.92rem; max-width: 460px; margin: 0 auto; line-height: 1.6; }
+.emt-empty .fa-spin { animation: emtSpin 0.9s linear infinite; }
+
+.emt-skeleton {
+    background: linear-gradient(90deg, var(--bg-base) 25%, #e2e8f0 50%, var(--bg-base) 75%);
+    background-size: 800px 100%;
+    animation: emtShimmer 1.4s infinite linear;
+    border-radius: 6px; height: 280px;
+}
+@keyframes emtShimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .filter-bar { flex-direction: column; align-items: flex-start; }
+    .filter-actions { margin-left: 0; width: 100%; }
+    .filter-actions .btn { flex: 1; justify-content: center; }
+    .emt-intro { flex-wrap: wrap; }
+    .emt-intro-live { margin-left: 0; }
+    .emt-signal { flex-direction: column; }
+    .chart-wrap-xl { height: 260px; }
+}
+@media (max-width: 480px) {
+    .emt-topics-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero-pad" style="padding-bottom: 60px;">
+    <div class="container">
+
+        <!-- Intro banner -->
+        <div class="emt-intro">
+            <div class="emt-intro-icon"><i class="fas fa-wave-square"></i></div>
+            <div class="emt-intro-text">
+                <p><strong>Emerging Threats</strong> goes beyond the 6 fixed categories. Using LDA topic
+                modeling (scikit-learn) over every classified threat's processed text, it surfaces themes the
+                classifier alone wouldn't name — and tracks how strongly each theme is trending week over week.</p>
+                <p>A rising topic with no matching category may be early signal of a new or shifting attack
+                pattern worth investigating before it becomes common enough to formally classify.</p>
+            </div>
+            <div class="emt-intro-live"><span class="dot"></span> Live model</div>
+        </div>
+
+        <!-- Controls -->
+        <div class="filter-bar" role="group" aria-label="Topic model controls">
+            <div class="filter-group">
+                <span class="filter-label"><i class="fas fa-layer-group"></i> Topics</span>
+                <div class="custom-select-wrap">
+                    <select id="topicsControl" aria-label="Number of topics">
+                        <option value="3">3 topics</option>
+                        <option value="4">4 topics</option>
+                        <option value="5" selected>5 topics</option>
+                        <option value="6">6 topics</option>
+                        <option value="8">8 topics</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-divider"></div>
+            <div class="filter-group">
+                <span class="filter-label"><i class="fas fa-calendar-week"></i> Window</span>
+                <div class="custom-select-wrap">
+                    <select id="weeksControl" aria-label="Number of weeks to show">
+                        <option value="4">Last 4 weeks</option>
+                        <option value="8" selected>Last 8 weeks</option>
+                        <option value="12">Last 12 weeks</option>
+                        <option value="26">Last 26 weeks</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button id="refreshBtn" class="btn btn-primary btn-sm"><i class="fas fa-rotate"></i> Run Model</button>
+            </div>
+        </div>
+
+        <!-- Dynamic content target -->
+        <div id="emtContent">
+            <div class="emt-empty">
+                <i class="fas fa-circle-notch fa-spin"></i>
+                <p>Training the topic model over your classified threat data...</p>
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}
+
+{% block body_scripts %}
+<script>
+/* ============================================================
+   EMERGING THREATS — LDA Topic Modeling JS
+   ============================================================ */
+
+const EMT_PALETTE = ['#0284c7', '#dc2626', '#7c3aed', '#16a34a', '#d97706', '#f97316', '#06b6d4', '#64748b', '#be185d', '#4338ca'];
+const EMT_DIM     = ['var(--cyan-dim)', 'var(--red-dim)', 'var(--purple-dim)', 'var(--green-dim)', 'var(--amber-dim)'];
+
+Chart.defaults.color       = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(15,23,42,0.05)';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size   = 11;
+
+let emtChart = null;
+
+function destroyEmtChart() {
+    if (emtChart) { emtChart.destroy(); emtChart = null; }
+}
+
+function renderEmptyState(message, isError) {
+    const el = document.getElementById('emtContent');
+    el.innerHTML = `
+        <div class="emt-empty">
+            <i class="fas ${isError ? 'fa-triangle-exclamation' : 'fa-database'}"></i>
+            <p>${message}</p>
+        </div>`;
+}
+
+function renderLoading() {
+    const el = document.getElementById('emtContent');
+    el.innerHTML = `
+        <div class="emt-card emt-stagger">
+            <div class="emt-card-body"><div class="emt-skeleton"></div></div>
+        </div>`;
+}
+
+function buildSignalHtml(signal) {
+    const dirClass = signal.direction === 'up' ? 'up' : (signal.direction === 'down' ? 'down' : '');
+    const icon = signal.direction === 'up' ? 'fa-arrow-trend-up' : (signal.direction === 'down' ? 'fa-arrow-trend-down' : 'fa-minus');
+    return `
+        <div class="emt-signal ${dirClass}">
+            <div class="emt-signal-icon"><i class="fas ${icon}"></i></div>
+            <div class="emt-signal-body">
+                <div class="emt-signal-label"><i class="fas fa-satellite-dish"></i>&nbsp; Auto-Generated Signal</div>
+                <div class="emt-signal-text">${signal.text}</div>
+            </div>
+        </div>`;
+}
+
+function renderTopicCards(topics) {
+    return `
+        <div class="emt-topics-grid">
+            ${topics.map((t, i) => `
+                <div class="emt-topic-card" style="--t-color:${EMT_PALETTE[i % EMT_PALETTE.length]}; --t-dim:${EMT_DIM[i % EMT_DIM.length]}">
+                    <div class="emt-topic-head">
+                        <div class="emt-topic-num">T${i + 1}</div>
+                        <div class="emt-topic-label">${t.label}</div>
+                    </div>
+                    <div class="emt-topic-keywords">
+                        ${t.keywords.map(k => `<span class="emt-kw-pill">${k.word} <span class="w">${k.weight.toFixed(2)}</span></span>`).join('')}
+                    </div>
+                </div>
+            `).join('')}
+        </div>`;
+}
+
+async function loadEmergingThreats() {
+    renderLoading();
+    const topics = document.getElementById('topicsControl').value;
+    const weeks  = document.getElementById('weeksControl').value;
+
+    let data;
+    try {
+        const res = await fetch(`/api/emerging-threats?topics=${topics}&weeks=${weeks}`);
+        data = await res.json();
+    } catch (err) {
+        renderEmptyState('Could not reach the emerging-threats model. Check that the server is running and try again.', true);
+        return;
+    }
+
+    if (!data.available) {
+        renderEmptyState(data.message || 'Not enough classified threat data yet to model topics.', false);
+        return;
+    }
+
+    const el = document.getElementById('emtContent');
+    el.innerHTML = `
+        ${buildSignalHtml(data.signal)}
+
+        <div class="emt-card emt-stagger">
+            <div class="emt-card-header">
+                <div class="emt-card-title-wrap">
+                    <div class="emt-card-title"><i class="fas fa-chart-line"></i> Topic Proportion Over Time</div>
+                    <div class="emt-card-sub">Average share of each discovered topic, per week, across ${data.documentCount} classified threat${data.documentCount !== 1 ? 's' : ''}.</div>
+                </div>
+                <span class="emt-card-badge">${data.numTopics} topics &middot; ${data.topicsOverTime.labels.length} week${data.topicsOverTime.labels.length !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="emt-card-body">
+                <div class="chart-wrap-xl"><canvas id="topicsTimeChart"></canvas></div>
+                <div class="emt-legend-row" id="topicsLegend"></div>
+            </div>
+        </div>
+
+        <div class="emt-section-title"><i class="fas fa-key"></i> Discovered Topics</div>
+        ${renderTopicCards(data.topics)}
+    `;
+
+    buildTopicsTimeChart(data.topicsOverTime, data.topics);
+}
+
+function buildTopicsTimeChart(topicsOverTime, topics) {
+    destroyEmtChart();
+    const ctx = document.getElementById('topicsTimeChart');
+    if (!ctx) return;
+
+    const datasets = topicsOverTime.series.map((s, i) => ({
+        label: topics[i] ? topics[i].label : `Topic ${i + 1}`,
+        data: s.data,
+        borderColor: EMT_PALETTE[i % EMT_PALETTE.length],
+        backgroundColor: EMT_PALETTE[i % EMT_PALETTE.length],
+        borderWidth: 2.2,
+        pointRadius: topicsOverTime.labels.length < 20 ? 3 : 0,
+        pointHoverRadius: 6,
+        tension: 0.4,
+        fill: false,
+    }));
+
+    emtChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: topicsOverTime.labels, datasets },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            animation: { duration: 800, easing: 'easeOutQuart' },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#ffffff', titleColor: '#0f172a', bodyColor: '#475569',
+                    borderColor: 'rgba(15,23,42,0.1)', borderWidth: 1, padding: 12, cornerRadius: 10,
+                    titleFont: { weight: '700', size: 12 }, bodyFont: { size: 11.5 },
+                    callbacks: { label: item => ` ${item.dataset.label}: ${item.parsed.y.toFixed(1)}%` }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { maxTicksLimit: 10 }, border: { display: false } },
+                y: { beginAtZero: true, grid: { color: 'rgba(15,23,42,0.05)' }, border: { display: false },
+                     ticks: { callback: v => v + '%' } }
+            }
+        }
+    });
+
+    const legend = document.getElementById('topicsLegend');
+    if (legend) {
+        legend.innerHTML = datasets.map((d, i) =>
+            `<div class="emt-legend-item"><span class="emt-legend-dot" style="background:${d.borderColor}"></span> ${d.label}</div>`
+        ).join('');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadEmergingThreats();
+    document.getElementById('refreshBtn')?.addEventListener('click', loadEmergingThreats);
+    document.getElementById('topicsControl')?.addEventListener('change', loadEmergingThreats);
+    document.getElementById('weeksControl')?.addEventListener('change', loadEmergingThreats);
+});
+</script>
+{% endblock %}

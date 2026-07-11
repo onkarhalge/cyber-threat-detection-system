@@ -1,0 +1,721 @@
+{% extends "base.html" %}
+
+{% block title %}Analyze — SENTINEL CTI Platform{% endblock %}
+{% block breadcrumb %}<i class="fas fa-search"></i> Analyze{% endblock %}
+
+{% block head_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   ANALYZE PAGE v2 — separated "Run Analysis" / "Threat Reports"
+   Uses site design tokens from style.css
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes anFadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+@keyframes anFadeIn { from { opacity:0; } to { opacity:1; } }
+
+/* ── Skip link (a11y) ─────────────────────────────────────── */
+.skip-link {
+    position: absolute; left: -9999px; top: auto;
+    background: var(--cyan); color: #fff;
+    padding: 10px 16px; border-radius: var(--radius-sm);
+    font-size: 0.85rem; font-weight: 600; z-index: 9999;
+}
+.skip-link:focus { left: 16px; top: 16px; position: fixed; }
+
+/* ── Section jump nav ─────────────────────────────────────── */
+.section-jump-nav {
+    display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap;
+}
+.section-jump-link {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--bg-surface); border: 1px solid var(--border-subtle);
+    border-radius: 100px; padding: 8px 16px;
+    font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);
+    text-decoration: none; transition: all 0.2s ease;
+}
+.section-jump-link:hover, .section-jump-link:focus-visible {
+    color: var(--cyan); border-color: var(--border-default); background: var(--cyan-dim);
+}
+.section-jump-link:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.section-jump-link i { font-size: 0.78rem; }
+.section-jump-link .count {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    background: var(--bg-base); padding: 1px 7px; border-radius: 100px;
+    color: var(--text-muted);
+}
+
+/* ── Block heading (used for both major sections) ─────────── */
+.block-heading {
+    display: flex; align-items: center; gap: 14px;
+    margin: 0 0 4px;
+    scroll-margin-top: 130px;
+}
+.block-heading-icon {
+    width: 38px; height: 38px; border-radius: var(--radius);
+    background: var(--cyan-dim); color: var(--cyan);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+}
+.block-heading h2 {
+    font-family: var(--font-display); font-size: 1.4rem; font-weight: 800;
+    color: var(--text-primary); margin: 0;
+}
+.block-heading-num {
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);
+    background: var(--bg-base); border: 1px solid var(--border-subtle);
+    border-radius: 100px; padding: 2px 10px; margin-left: auto;
+}
+.block-sub {
+    font-size: 0.88rem; color: var(--text-muted); margin: 6px 0 24px 52px; max-width: 640px;
+}
+@media (max-width: 600px) { .block-sub { margin-left: 0; } }
+
+.block-divider {
+    height: 1px; background: linear-gradient(90deg, var(--border-default), transparent);
+    margin: 48px 0 36px;
+}
+
+/* ── Filter toolbar (Threat Reports section) ─────────────── */
+.report-toolbar {
+    background: var(--bg-surface); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg); padding: 18px 20px;
+    box-shadow: var(--shadow-card); margin-bottom: 18px;
+}
+.report-toolbar-row {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.toolbar-fieldset { border: none; padding: 0; margin: 0; display: contents; }
+.toolbar-legend {
+    font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.search-field {
+    position: relative; flex: 1 1 260px; min-width: 200px;
+}
+.search-field i {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    color: var(--text-muted); font-size: 0.82rem;
+}
+.search-field input {
+    width: 100%; background: var(--bg-base); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius); padding: 10px 14px 10px 38px;
+    font-size: 0.88rem; font-family: var(--font-body); color: var(--text-primary);
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-field input:focus { border-color: var(--border-strong); box-shadow: 0 0 0 3px var(--cyan-dim); }
+
+.cat-select-wrap { position: relative; flex-shrink: 0; }
+.cat-select-wrap select {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    background: var(--bg-base); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius); color: var(--text-primary);
+    font-family: var(--font-body); font-size: 0.85rem; font-weight: 500;
+    padding: 10px 36px 10px 14px; cursor: pointer; outline: none;
+    min-width: 160px; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.cat-select-wrap select:focus { border-color: var(--border-strong); box-shadow: 0 0 0 3px var(--cyan-dim); }
+.cat-select-wrap::after {
+    content: ''; pointer-events: none; position: absolute; right: 13px; top: 50%;
+    transform: translateY(-50%); width: 0; height: 0;
+    border-left: 4px solid transparent; border-right: 4px solid transparent;
+    border-top: 5px solid var(--text-muted);
+}
+
+.report-pills {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;
+    padding-top: 14px; border-top: 1px solid var(--border-subtle);
+}
+
+/* ── Results summary bar ──────────────────────────────────── */
+.results-summary {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px; gap: 12px; flex-wrap: wrap;
+}
+.results-summary-text { font-size: 0.88rem; color: var(--text-secondary); }
+.results-summary-text strong { color: var(--text-primary); font-family: var(--font-mono); }
+.results-live {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 0.72rem; color: var(--green); font-weight: 600;
+}
+.results-live .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+/* ── Report card (replaces old click-to-preview row) ─────── */
+.report-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    animation: anFadeUp 0.45s cubic-bezier(0.22,1,0.36,1) both;
+}
+.report-card:hover { border-color: var(--border-default); box-shadow: var(--shadow-elevated); }
+.report-card:focus-within { border-color: var(--border-strong); }
+
+.report-card-top {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 20px 22px 16px;
+}
+.report-status-badge {
+    flex-shrink: 0; width: 46px; height: 46px; border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+}
+.report-status-badge.threat { background: var(--red-dim); color: var(--red); }
+.report-status-badge.clean  { background: var(--green-dim); color: var(--green); }
+
+.report-card-main { flex: 1; min-width: 0; }
+.report-card-headline {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px;
+}
+.report-cat-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 4px 11px; border-radius: 100px;
+    background: var(--cat-dim, var(--red-dim)); color: var(--cat-color, var(--red));
+    border: 1px solid var(--cat-border, rgba(220,38,38,0.2));
+}
+.report-cat-pill.safe { background: var(--green-dim); color: var(--green); border-color: rgba(22,163,74,0.2); }
+.report-conf-tag {
+    font-family: var(--font-mono); font-size: 0.74rem; font-weight: 600; color: var(--text-muted);
+}
+.report-id-tag {
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);
+    margin-left: auto;
+}
+.report-card-snippet {
+    font-size: 0.92rem; color: var(--text-secondary); line-height: 1.55;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.report-card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 22px; background: var(--bg-base);
+    border-top: 1px solid var(--border-subtle);
+    gap: 12px; flex-wrap: wrap;
+}
+.report-meta-group {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.report-meta-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.76rem; color: var(--text-muted); font-family: var(--font-mono);
+}
+.report-meta-item i { color: var(--text-muted); font-size: 0.7rem; }
+
+.btn-view-report {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--cyan); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    padding: 9px 18px; font-size: 0.84rem; font-weight: 700;
+    text-decoration: none; cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    white-space: nowrap;
+}
+.btn-view-report:hover { background: #0369a1; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(2,132,199,0.3); }
+.btn-view-report:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.btn-view-report i { font-size: 0.78rem; transition: transform 0.2s ease; }
+.btn-view-report:hover i { transform: translateX(2px); }
+
+/* Confidence mini-bar inline in footer */
+.report-conf-bar {
+    display: flex; align-items: center; gap: 7px; min-width: 110px;
+}
+.report-conf-track {
+    width: 70px; height: 5px; background: var(--border-subtle); border-radius: 10px; overflow: hidden;
+}
+.report-conf-fill { height: 100%; border-radius: 10px; }
+
+/* ── Category group wrapper ───────────────────────────────── */
+.report-group { margin-bottom: 36px; scroll-margin-top: 130px; }
+.report-group-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+}
+.report-group-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 4px currentColor; opacity: 0.92;}
+.report-group-header h3 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0; }
+.report-group-count {
+    font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);
+    background: var(--bg-surface); border: 1px solid var(--border-subtle);
+    padding: 3px 10px; border-radius: 100px; margin-left: auto;
+}
+
+/* ── Empty / no-results state ─────────────────────────────── */
+.no-results {
+    text-align: center; padding: 60px 24px;
+    background: var(--bg-surface); border: 1px dashed var(--border-subtle);
+    border-radius: var(--radius-xl);
+}
+.no-results i { font-size: 2.4rem; color: var(--text-muted); opacity: 0.4; margin-bottom: 16px; display: block; }
+.no-results h4 { font-size: 1.05rem; color: var(--text-primary); margin-bottom: 6px; }
+.no-results p { font-size: 0.88rem; color: var(--text-muted); }
+
+/* ── Accessibility helpers ────────────────────────────────── */
+.sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible {
+    outline: 2px solid var(--cyan); outline-offset: 2px;
+}
+
+/* ── Live sources panel ────────────────────────────────────── */
+.sources-panel {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px; margin: 16px 0 4px;
+}
+.source-btn {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg-base); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius); padding: 12px 14px;
+    cursor: pointer; text-align: left; transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+    font-family: var(--font-body);
+}
+.source-btn:hover { border-color: var(--border-strong); box-shadow: 0 4px 14px rgba(2,132,199,0.12); transform: translateY(-1px); }
+.source-btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.source-btn:disabled { opacity: 0.6; cursor: wait; transform: none; }
+.source-btn-icon {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: var(--radius-sm);
+    background: var(--cyan-dim); color: var(--cyan);
+    display: flex; align-items: center; justify-content: center; font-size: 0.92rem;
+}
+.source-btn-text { min-width: 0; flex: 1; }
+.source-btn-name { font-size: 0.86rem; font-weight: 700; color: var(--text-primary); }
+.source-btn-sub {
+    font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.source-btn-status { margin-left: auto; flex-shrink: 0; font-size: 0.85rem; color: var(--text-muted); }
+.source-btn.is-loading .source-btn-status i { color: var(--cyan); }
+.source-btn.is-done .source-btn-status i { color: var(--green); }
+.source-btn.is-error .source-btn-status i { color: var(--red); }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 700px) {
+    .report-card-top { flex-direction: column; }
+    .report-id-tag { margin-left: 0; }
+    .report-card-footer { flex-direction: column; align-items: stretch; }
+    .btn-view-report { justify-content: center; }
+    .report-meta-group { justify-content: space-between; }
+    .search-field { flex: 1 1 100%; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<a href="#analysis-results" class="skip-link">Skip to threat reports</a>
+
+<section class="analysis-section page-hero-pad">
+    <div class="container">
+
+        <div class="section-header">
+            <div class="section-label"><i class="fas fa-search"></i>&nbsp; Threat Analyzer</div>
+            <h2>Analyze Intelligence</h2>
+            <p>Paste threat text or fetch live OTX pulses for instant AI-powered classification.</p>
+        </div>
+
+        <!-- ── Section jump nav ──────────────────────────────── -->
+        <nav class="section-jump-nav" aria-label="Page sections">
+            <a href="#run-analysis" class="section-jump-link"><i class="fas fa-keyboard"></i> Run Analysis</a>
+            <a href="#analysis-results" class="section-jump-link">
+                <i class="fas fa-folder-open"></i> Threat Reports
+                <span class="count">{{ threats|length }}</span>
+            </a>
+        </nav>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 1 — RUN ANALYSIS
+             ═══════════════════════════════════════════════════ -->
+        <section id="run-analysis" aria-labelledby="run-analysis-heading">
+            <div class="block-heading" id="run-analysis-heading">
+                <div class="block-heading-icon"><i class="fas fa-keyboard"></i></div>
+                <h2>Run Analysis</h2>
+            </div>
+            <p class="block-sub">Submit text manually for instant classification, or pull the latest pulses straight from AlienVault OTX.</p>
+
+            <div class="analysis-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <div class="panel-title-icon"><i class="fas fa-keyboard"></i></div>
+                        <div>
+                            <h3>Manual Text Analysis</h3>
+                            <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">SVM + DistilBERT + Gemini pipeline</p>
+                        </div>
+                    </div>
+                    <div class="panel-actions">
+                        <button id="fetchAllBtn" class="btn btn-secondary" aria-label="Fetch latest intelligence from all sources">
+                            <i class="fas fa-bolt"></i> Fetch All Sources
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sources-panel" role="group" aria-label="Live threat intelligence sources">
+                    <button type="button" class="source-btn" data-source="OTX" data-endpoint="/fetch" aria-label="Fetch latest OTX pulses">
+                        <span class="source-btn-icon"><i class="fas fa-satellite-dish"></i></span>
+                        <span class="source-btn-text">
+                            <div class="source-btn-name">OTX</div>
+                            <div class="source-btn-sub">AlienVault pulses</div>
+                        </span>
+                        <span class="source-btn-status"><i class="fas fa-arrow-rotate-right"></i></span>
+                    </button>
+                    <button type="button" class="source-btn" data-source="ThreatFox" data-endpoint="/fetch/threatfox" aria-label="Fetch latest ThreatFox IOCs">
+                        <span class="source-btn-icon"><i class="fas fa-crosshairs"></i></span>
+                        <span class="source-btn-text">
+                            <div class="source-btn-name">ThreatFox</div>
+                            <div class="source-btn-sub">IOCs · abuse.ch</div>
+                        </span>
+                        <span class="source-btn-status"><i class="fas fa-arrow-rotate-right"></i></span>
+                    </button>
+                    <button type="button" class="source-btn" data-source="URLhaus" data-endpoint="/fetch/urlhaus" aria-label="Fetch latest URLhaus malware URLs">
+                        <span class="source-btn-icon"><i class="fas fa-link"></i></span>
+                        <span class="source-btn-text">
+                            <div class="source-btn-name">URLhaus</div>
+                            <div class="source-btn-sub">Malware URLs</div>
+                        </span>
+                        <span class="source-btn-status"><i class="fas fa-arrow-rotate-right"></i></span>
+                    </button>
+                    <button type="button" class="source-btn" data-source="MalwareBazaar" data-endpoint="/fetch/malwarebazaar" aria-label="Fetch latest MalwareBazaar samples">
+                        <span class="source-btn-icon"><i class="fas fa-bug"></i></span>
+                        <span class="source-btn-text">
+                            <div class="source-btn-name">MalwareBazaar</div>
+                            <div class="source-btn-sub">Malware samples</div>
+                        </span>
+                        <span class="source-btn-status"><i class="fas fa-arrow-rotate-right"></i></span>
+                    </button>
+                </div>
+
+                <form id="predictForm" aria-label="Manual threat text analysis form">
+                    <label for="textInput" class="sr-only">Paste threat intelligence text to analyze</label>
+                    <textarea id="textInput"
+                        aria-label="Threat intelligence text input"
+                        placeholder="Paste threat intelligence text, security alert, forum post, or OSINT content here...&#10;&#10;Example: A new ransomware campaign has been detected encrypting files with AES-256 and demanding 2 BTC ransom via Tor..."></textarea>
+                    <div style="display:flex; justify-content:flex-end; margin-top:12px; gap:10px;">
+                        <button type="button" class="btn btn-ghost btn-sm"
+                            onclick="document.getElementById('textInput').value=''">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search"></i> Analyze Threat
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="error" role="alert"></div>
+
+            <div id="loading" role="status" aria-live="polite">
+                <div class="progress-shell">
+                    <div class="progress-ring-wrap">
+                        <div class="progress-ring"></div>
+                        <div class="progress-icon"><i class="fas fa-shield-halved"></i></div>
+                    </div>
+                    <div class="progress-label" id="progressLabel">Initializing...</div>
+                    <div class="progress-steps">
+                        <div class="progress-step" id="step1"></div>
+                        <div class="progress-step" id="step2"></div>
+                        <div class="progress-step" id="step3"></div>
+                        <div class="progress-step" id="step4"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="block-divider" role="presentation"></div>
+
+        <!-- ═══════════════════════════════════════════════════
+             SECTION 2 — THREAT REPORTS
+             ═══════════════════════════════════════════════════ -->
+        <section id="analysis-results" aria-labelledby="reports-heading">
+            <div class="block-heading" id="reports-heading">
+                <div class="block-heading-icon"><i class="fas fa-folder-open"></i></div>
+                <h2>Threat Reports</h2>
+                <span class="block-heading-num">{{ threats|length }} record{{ 's' if threats|length != 1 }}</span>
+            </div>
+            <p class="block-sub">Every classification result, organized by category. Filter or search below, then open any record for the full report.</p>
+
+            <!-- ── Filter Toolbar ────────────────────────────── -->
+            <div class="report-toolbar" role="search" aria-label="Filter threat reports">
+                <form method="GET" action="/search" class="report-toolbar-row">
+                    <span class="toolbar-legend"><i class="fas fa-filter"></i> Filter</span>
+
+                    <div class="search-field">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <label for="reportSearch" class="sr-only">Search threats, summaries, categories</label>
+                        <input type="text" id="reportSearch" name="query" value="{{ search_query }}"
+                            placeholder="Search threats, summaries, categories...">
+                    </div>
+
+                    <div class="cat-select-wrap">
+                        <label for="reportCategorySelect" class="sr-only">Filter by category</label>
+                        <select name="category" id="reportCategorySelect" onchange="this.form.submit()">
+                            {% for cat in categories %}
+                            <option value="{{ cat }}" {% if cat==selected_category %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Search</button>
+                    {% if search_query or selected_category != 'All' %}
+                    <a href="/analyze" class="btn btn-ghost btn-sm"><i class="fas fa-undo"></i> Reset</a>
+                    {% endif %}
+                </form>
+
+                <div class="report-pills" role="group" aria-label="Quick category filters">
+                    <a href="/analyze" class="filter-chip {% if selected_category == 'All' %}active{% endif %}">
+                        <i class="fas fa-th"></i> All
+                    </a>
+                    {% for cat in categories[1:] %}
+                    <a href="/search?category={{ cat }}"
+                        class="filter-chip {% if selected_category == cat %}active{% endif %}">
+                        {{ cat }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- ── Results summary ──────────────────────────── -->
+            <div class="results-summary">
+                <div class="results-summary-text">
+                    Showing <strong>{{ threats|length }}</strong> result{{ 's' if threats|length != 1 }}
+                    {% if search_query %} for "<strong>{{ search_query }}</strong>"{% endif %}
+                    {% if selected_category != 'All' %} in <strong>{{ selected_category }}</strong>{% endif %}
+                </div>
+                {% if threats %}
+                <div class="results-live"><span class="dot"></span> Live data</div>
+                {% endif %}
+            </div>
+
+            {% if threats %}
+
+            <!-- ── Distribution Chart ────────────────────────── -->
+            <div class="overview-chart-card">
+                <div>
+                    <div class="chart-title"><i class="fas fa-chart-pie"></i>&nbsp; Threat Distribution</div>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="overallChart" role="img" aria-label="Doughnut chart showing distribution of threats by category"></canvas>
+                        <div class="chart-center-label">
+                            <div class="chart-center-value">{{ threats|length }}</div>
+                            <div class="chart-center-sub">Total</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-legend" id="chartLegend">
+                    {% set ns = namespace(seen=[]) %}
+                    {% for t in threats %}
+                    {% if t[6] and t[6] not in ns.seen %}
+                    {% set _ = ns.seen.append(t[6]) %}
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background:
+                            {% if t[6] == 'Ransomware' %}#d97706
+                            {% elif t[6] == 'Malware' %}#dc2626
+                            {% elif t[6] == 'Phishing' %}#7c3aed
+                            {% elif t[6] == 'DDoS Attack' %}#0284c7
+                            {% elif t[6] == 'Botnets' %}#16a34a
+                            {% elif t[6] == 'Spam' %}#f97316
+                            {% else %}#64748b{% endif %};"></span>
+                        <span>{{ t[6] }}</span>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- ── Category groups ──────────────────────────── -->
+            {% set category_groups = {} %}
+            {% for t in threats %}
+            {% set cat = t[6] or 'No Category' %}
+            {% if cat not in category_groups %}{% set _ = category_groups.update({cat: []}) %}{% endif %}
+            {% set _ = category_groups[cat].append(t) %}
+            {% endfor %}
+
+            {% if category_groups|length > 1 %}
+            <nav class="section-jump-nav" aria-label="Jump to category" style="margin-top:4px;">
+                {% for cat, cat_threats in category_groups.items() %}
+                <a href="#group-{{ cat|replace(' ', '-') }}" class="section-jump-link">
+                    <i class="fas fa-circle" style="font-size:0.5rem; color:
+                        {% if cat == 'Ransomware' %}#d97706
+                        {% elif cat == 'Malware' %}#dc2626
+                        {% elif cat == 'Phishing' %}#7c3aed
+                        {% elif cat == 'DDoS Attack' %}#0284c7
+                        {% elif cat == 'Botnets' %}#16a34a
+                        {% elif cat == 'Spam' %}#f97316
+                        {% else %}#64748b{% endif %};"></i>
+                    {{ cat }}
+                    <span class="count">{{ cat_threats|length }}</span>
+                </a>
+                {% endfor %}
+            </nav>
+            {% endif %}
+
+            {% for cat, cat_threats in category_groups.items() %}
+            {% set cat_color =
+                '#d97706' if cat == 'Ransomware' else
+                '#dc2626' if cat == 'Malware' else
+                '#7c3aed' if cat == 'Phishing' else
+                '#0284c7' if cat == 'DDoS Attack' else
+                '#16a34a' if cat == 'Botnets' else
+                '#f97316' if cat == 'Spam' else
+                '#64748b' %}
+            <div class="report-group" id="group-{{ cat|replace(' ', '-') }}">
+                <div class="report-group-header">
+                    <span class="report-group-dot" style="background:{{ cat_color }}; color:{{ cat_color }}"></span>
+                    <h3>{{ cat }}</h3>
+                    <span class="report-group-count">{{ cat_threats|length }} record{{ 's' if cat_threats|length != 1 }}</span>
+                </div>
+
+                {% for t in cat_threats %}
+                <article class="report-card" aria-labelledby="report-title-{{ t[0] }}">
+                    <div class="report-card-top">
+                        <div class="report-status-badge {% if t[4] %}threat{% else %}clean{% endif %}" aria-hidden="true">
+                            <i class="fas fa-{% if t[4] %}radiation{% else %}check{% endif %}"></i>
+                        </div>
+                        <div class="report-card-main">
+                            <div class="report-card-headline">
+                                {% if t[4] %}
+                                <span class="report-cat-pill" style="--cat-color:{{ cat_color }}; --cat-dim:{{ cat_color }}1a; --cat-border:{{ cat_color }}33;">
+                                    <i class="fas fa-tag"></i> {{ t[6] or 'Unknown' }}
+                                </span>
+                                <span class="report-conf-tag">{{ "%.0f"|format(t[7]*100 if t[7] else 0) }}% confidence</span>
+                                {% else %}
+                                <span class="report-cat-pill safe"><i class="fas fa-check"></i> Clean — No Threat</span>
+                                {% endif %}
+                                <span class="report-id-tag">#{{ t[0] }}</span>
+                            </div>
+                            <h4 id="report-title-{{ t[0] }}" class="sr-only">
+                                {{ t[6] or 'Clean' }} report, record {{ t[0] }}
+                            </h4>
+                            <p class="report-card-snippet">{{ t[2][:180] }}{% if t[2]|length > 180 %}…{% endif %}</p>
+                        </div>
+                    </div>
+
+                    <div class="report-card-footer">
+                        <div class="report-meta-group">
+                            <span class="report-meta-item"><i class="fas fa-clock"></i> {{ t[9] }}</span>
+                            {% if t[1] and t[1].startswith('threatfox:') %}
+                            <span class="report-meta-item"><i class="fas fa-crosshairs"></i> ThreatFox</span>
+                            {% elif t[1] and t[1].startswith('urlhaus:') %}
+                            <span class="report-meta-item"><i class="fas fa-link"></i> URLhaus</span>
+                            {% elif t[1] and t[1].startswith('bazaar:') %}
+                            <span class="report-meta-item"><i class="fas fa-bug"></i> MalwareBazaar</span>
+                            {% elif t[1] %}
+                            <span class="report-meta-item"><i class="fas fa-satellite-dish"></i> OTX Source</span>
+                            {% else %}
+                            <span class="report-meta-item"><i class="fas fa-keyboard"></i> Manual Input</span>
+                            {% endif %}
+                            {% if t[4] %}
+                            <span class="report-conf-bar" aria-hidden="true">
+                                <span class="report-conf-track">
+                                    <span class="report-conf-fill" style="width:{{ (t[7]*100 if t[7] else 0)|round|int }}%; background:{{ cat_color }};"></span>
+                                </span>
+                            </span>
+                            {% endif %}
+                        </div>
+                        <a href="/threat/{{ t[0] }}" class="btn-view-report" aria-label="View full report for record {{ t[0] }}">
+                            View Full Report <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            {% else %}
+            <div class="no-results">
+                <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                <h4>No threats found</h4>
+                <p>
+                    {% if search_query or selected_category != 'All' %}
+                    Try adjusting your search or filter, or
+                    <a href="/analyze">clear all filters</a>.
+                    {% else %}
+                    Run an analysis above or fetch OTX pulses to get started.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+
+        </section>
+
+    </div>
+</section>
+
+{% endblock %}
+
+{% block body_scripts %}
+<script id="allCategoriesData" type="application/json">{{ all_categories|tojson }}</script>
+<script>
+    /* Redefine createOverallChart for this page's markup:
+       the shared script.js reads counts from ".category-header h2",
+       but this page uses ".report-group-header h3" + ".report-group-count". */
+    function createOverallChart() {
+        const ctx = document.getElementById('overallChart');
+        if (!ctx) return;
+
+        const allCategories = JSON.parse(document.getElementById('allCategoriesData')?.textContent || '[]');
+        const counts = {};
+        allCategories.forEach(c => counts[c] = 0);
+
+        document.querySelectorAll('.report-group').forEach(group => {
+            const nameEl  = group.querySelector('.report-group-header h3');
+            const countEl = group.querySelector('.report-group-count');
+            if (!nameEl || !countEl) return;
+            const cat = nameEl.textContent.trim();
+            const num = parseInt((countEl.textContent.match(/\d+/) || ['0'])[0], 10);
+            if (cat in counts) counts[cat] = num;
+        });
+
+        const labels = Object.keys(counts).filter(k => counts[k] > 0);
+        const data   = labels.map(k => counts[k]);
+        if (!labels.length) return;
+
+        if (window._overallChartInstance) window._overallChartInstance.destroy();
+
+        const COLOR_MAP = {
+            'Ransomware': '#d97706', 'Malware': '#dc2626', 'Phishing': '#7c3aed',
+            'DDoS Attack': '#0284c7', 'Botnets': '#16a34a', 'Spam': '#f97316',
+        };
+        const colors = labels.map(l => COLOR_MAP[l] || '#64748b');
+
+        window._overallChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels, datasets: [{
+                data, backgroundColor: colors, borderWidth: 0,
+                hoverBorderColor: '#fff', hoverBorderWidth: 2, hoverOffset: 6,
+            }]},
+            options: {
+                responsive: true, cutout: '65%',
+                animation: { animateScale: true, animateRotate: true, duration: 800 },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#fff', titleColor: '#0f172a', bodyColor: '#475569',
+                        borderColor: 'rgba(15,23,42,0.1)', borderWidth: 1, padding: 12, cornerRadius: 10,
+                        callbacks: {
+                            label: item => {
+                                const total = item.dataset.data.reduce((a,b)=>a+b,0);
+                                const pct = total ? ((item.parsed/total)*100).toFixed(1) : 0;
+                                return ` ${item.label}: ${item.parsed} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        createOverallChart();
+        initCardAnimations();
+
+        // Stagger report card entrance
+        document.querySelectorAll('.report-card').forEach((card, i) => {
+            card.style.animationDelay = `${Math.min(i * 0.04, 0.6)}s`;
+        });
+    });
+</script>
+{% endblock %}
