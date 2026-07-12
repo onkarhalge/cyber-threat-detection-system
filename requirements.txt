@@ -7,5 +7,5 @@ joblib
 numpy<2.0
 pandas
 tqdm
-gensim
+gensim==4.3.3
 gunicorn
